@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+<!-- DEVICE -->
+	<project path="device/nvidia/s8515" name="linckandrea/device_nvidia_s8515" remote="github" revision="cm-11.0"/>
+<!-- KERNEL -->
+<project path="kernel/nvidia/s8515" name="linckandrea/Blackphone-BP1-Kernel" remote="github" revision="master"/>
+<project path="vendor/nvidia/s8515" name="BriceChk/vendor_nvidia_s8515" remote="github" revision="master"/>
+
+</manifest>
