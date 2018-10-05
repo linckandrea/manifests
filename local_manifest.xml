@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+<project name="linckandrea/android_device_motorola_victara" path="device/motorola/victara" revision="P-r3-test" remote="github" />
+<project name="linckandrea/android_kernel_motorola_msm8974" path="kernel/motorola/msm8974" revision="mtp-test" remote="github" />
+<project name="linckandrea/proprietary_vendor_motorola" path="vendor/motorola" revision="lineage-15.1" remote="github" />
+<project name="linckandrea/android_system_qcom" path="system/qcom" revision="p-victara" remote="github" />
+<project name="linckandrea/hardware_qcom_display" path="hardware/qcom/display-caf/8974" revision="p-victara" remote="github" />
+</manifest>
