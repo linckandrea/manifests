@@ -1,0 +1,9 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+<project name="linckandrea/android_device_motorola_victara" path="device/motorola/victara" revision="AOSPA" remote="github" />
+<project name="LineageOS/android_kernel_motorola_msm8974" path="kernel/motorola/msm8974" revision="mtp-test" remote="github" />
+<project name="TheMuppets/proprietary_vendor_motorola" path="vendor/motorola" revision="lineage-17.1" remote="github" />
+<project name="LineageOS/android_system_qcom" path="system/qcom" revision="lineage-17.1" remote="lineage-17.1" />
+<project name="LineageOS/android_external_bson" path="external/bson" revision="lineage-17.1" remote="github" />
+</manifest>
