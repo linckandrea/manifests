@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-<project name="linckandrea/android_device_nextbit_ether" path="device/nextbit/ether" revision="lineage-17.1" remote="github" />
-<project name="linckandrea/android_kernel_nextbit_msm8992" path="kernel/nextbit/msm8992" revision="lineage-17.1-test" remote="github" />
-<project name="TheMuppets/proprietary_vendor_nextbit" path="vendor/nextbit" revision="lineage-17.1" remote="github" />
+<project name="linckandrea/android_device_nextbit_ether" path="device/nextbit/ether" revision="lineage-17.1-test" remote="github" />
+<project name="linckandrea/android_kernel_nextbit_msm8992" path="kernel/nextbit/msm8992" revision="lineage-17.1" remote="github" />
+<project name="linckandrea/proprietary_vendor_nextbit" path="vendor/nextbit" revision="lineage-17.1" remote="github" />
 </manifest>
