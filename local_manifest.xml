@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+<project name="linckandrea/android_device_motorola_victara" path="device/motorola/victara" revision="lineage-17.1" remote="github" />
+<project name="linckandrea/proprietary_vendor_motorola" path="vendor/motorola" revision="lineage-17.1" remote="github" />
+</manifest>
