@@ -2,7 +2,7 @@
 <manifest>
 <project name="linckandrea/android_device_sony_poplar" path="device/sony/poplar" revision="lineage-17.1-test" remote="github" />
 <project name="linckandrea/android_device_sony_yoshino-common" path="device/sony/yoshino-common" revision="lineage-17.1" remote="github" />
-<project name="linckandrea/proprietary_vendor_sony" path="vendor/sony" revision="lineage-17.1-test" remote="github" />
+<project name="linckandrea/proprietary_vendor_sony" path="vendor/sony" revision="lineage-17.1-test2" remote="github" />
 <project name="CarbonROM/android_device_sony_common-treble" path="device/sony/common-treble" revision="cr-8.0" remote="github" />
 <project name="CarbonROM/android_kernel_sony_msm8998" path="kernel/sony/msm8998" revision="cr-8.0" remote="github" />
 </manifest>
