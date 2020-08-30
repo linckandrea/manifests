@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
 <!-- DEVICE -->
-	<project path="device/nvidia/s8515" name="linckandrea/device_nvidia_s8515" remote="github" revision="staging/cm11"/>
+	<project path="device/nvidia/s8515" name="linckandrea/device_nvidia_s8515" remote="github" revision="staging/cm11-3"/>
 <!-- KERNEL -->
-<project path="kernel/nvidia/s8515" name="linckandrea/Blackphone-BP1-Kernel" remote="github" revision="cm11"/>
+<project path="kernel/nvidia/s8515" name="linckandrea/Wiko_wax_custom_kernel" remote="github" revision="cm11"/>
 <project path="vendor/nvidia/s8515" name="linckandrea/vendor_nvidia_s8515" remote="github" revision="master"/>
 
 </manifest>
