@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-<project name="linckandrea/android_device_sony_poplar" path="device/sony/poplar" revision="lineage-17.1" remote="github" />
-<project name="linckandrea/android_device_sony_yoshino-common" path="device/sony/yoshino-common" revision="lineage-17.1" remote="github" />
-<project name="linckandrea/proprietary_vendor_sony" path="vendor/sony" revision="cr-8.0" remote="github" />
-<project name="CarbonROM/android_device_sony_common-treble" path="device/sony/common-treble" revision="cr-8.0" remote="github" />
-<project name="CarbonROM/android_kernel_sony_msm8998" path="kernel/sony/msm8998" revision="cr-8.0" remote="github" />
+<project name="whatawurst/android_device_sony_poplar" path="device/sony/poplar" revision="lineage-17.1" remote="github" />
+<project name="linckandrea/android_device_sony_yoshino" path="device/sony/yoshino-common" revision="lineage-17.1" remote="github" />
+<project name="whatawurst/android_device_sony_common-treble" path="device/sony/common-treble" revision="lineage-17.1" remote="github" />
+<project name="linckandrea/Pop-kernel-poplar-Q" path="kernel/sony/msm8998" revision="EAS-test" remote="github" />
+<project name="obsd39/proprietary_vendor_sony" path="vendor/sony" revision="cr-8.0" remote="github" />
 </manifest>
