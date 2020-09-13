@@ -1,0 +1,1491 @@
+From 2a1469a05522f5d82e2c4f211e8094b2a3f02097 Mon Sep 17 00:00:00 2001
+From: Andrea <linckandrea01@gmail.com>
+Date: Sun, 13 Sep 2020 09:21:44 +0200
+Subject: [PATCH 01/16] makefile: disable ccache
+
+Change-Id: Iec777ca261b418a296464992c3cefa762d9b27ef
+---
+ Makefile | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 6a176521c7f..ce43e85b86c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -158,7 +158,7 @@ VPATH		:= $(srctree)$(if $(KBUILD_EXTMOD),:$(KBUILD_EXTMOD))
+ 
+ export srctree objtree VPATH
+ 
+-CCACHE := $(shell which ccache)
++#CCACHE := $(shell which ccache)
+ 
+ # SUBARCH tells the usermode build what the underlying arch is.  That is set
+ # first, and if a usermode build is happening, the "ARCH=um" on the command
+@@ -240,8 +240,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
+ 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
+ 	  else echo sh; fi ; fi)
+ 
+-HOSTCC       = $(CCACHE) gcc
+-HOSTCXX      = $(CCACHE) g++
++HOSTCC       = gcc
++HOSTCXX      = g++
+ HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89 -pipe
+ HOSTCXXFLAGS = -O2
+ 
+@@ -327,7 +327,7 @@ include $(srctree)/scripts/Kbuild.include
+ 
+ AS		= $(CROSS_COMPILE)as
+ LD		= $(CROSS_COMPILE)ld
+-CC             = $(CCACHE) $(CROSS_COMPILE)gcc
++CC             = $(CROSS_COMPILE)gcc
+ CPP		= $(CC) -E
+ AR		= $(CROSS_COMPILE)ar
+ NM		= $(CROSS_COMPILE)nm
+-- 
+2.25.1
+
+
+From 75b2a0f36f7a6a0c3991e62c1cd50d7376abce3c Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Thu, 6 Jun 2013 09:12:33 -0400
+Subject: [PATCH 02/16] do_last(): fix missing checks for LAST_BIND case
+
+/proc/self/cwd with O_CREAT should fail with EISDIR.  /proc/self/exe, OTOH,
+should fail with ENOTDIR when opened with O_DIRECTORY.
+
+Change-Id: I01c85a6a3894c6854c604f192f221175edc19867
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/namei.c | 24 +++---------------------
+ 1 file changed, 3 insertions(+), 21 deletions(-)
+
+diff --git a/fs/namei.c b/fs/namei.c
+index 9ce5f82d86d..e9627a7d90e 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -2758,28 +2758,10 @@ static int do_last(struct nameidata *nd, struct path *path,
+ 	nd->flags &= ~LOOKUP_PARENT;
+ 	nd->flags |= op->intent;
+ 
+-	switch (nd->last_type) {
+-	case LAST_DOTDOT:
+-	case LAST_DOT:
++	if (nd->last_type != LAST_NORM) {
+ 		error = handle_dots(nd, nd->last_type);
+ 		if (error)
+ 			return error;
+-		/* fallthrough */
+-	case LAST_ROOT:
+-		error = complete_walk(nd);
+-		if (error)
+-			return error;
+-		audit_inode(name, nd->path.dentry, 0);
+-		if (open_flag & O_CREAT) {
+-			error = -EISDIR;
+-			goto out;
+-		}
+-		goto finish_open;
+-	case LAST_BIND:
+-		error = complete_walk(nd);
+-		if (error)
+-			return error;
+-		audit_inode(name, dir, 0);
+ 		goto finish_open;
+ 	}
+ 
+@@ -2910,19 +2892,19 @@ finish_lookup:
+ 	}
+ 	nd->inode = inode;
+ 	/* Why this, you ask?  _Now_ we might have grown LOOKUP_JUMPED... */
++finish_open:
+ 	error = complete_walk(nd);
+ 	if (error) {
+ 		path_put(&save_parent);
+ 		return error;
+ 	}
++	audit_inode(name, nd->path.dentry, 0);
+ 	error = -EISDIR;
+ 	if ((open_flag & O_CREAT) && S_ISDIR(nd->inode->i_mode))
+ 		goto out;
+ 	error = -ENOTDIR;
+ 	if ((nd->flags & LOOKUP_DIRECTORY) && !can_lookup(nd->inode))
+ 		goto out;
+-	audit_inode(name, nd->path.dentry, 0);
+-finish_open:
+ 	if (!S_ISREG(nd->inode->i_mode))
+ 		will_truncate = false;
+ 
+-- 
+2.25.1
+
+
+From 6bbc38cd29f25fcb6b621c3ec32918e2852e0de5 Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Tue, 11 Jun 2013 08:23:01 +0400
+Subject: [PATCH 03/16] allow build_open_flags() to return an error
+
+Change-Id: I6e900fc3facf5a3febefe138fea7db493bc383d8
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/exec.c     | 10 ++++++----
+ fs/internal.h |  5 +++--
+ fs/namei.c    |  8 ++++----
+ fs/open.c     | 49 ++++++++++++++++++++++++++++---------------------
+ 4 files changed, 41 insertions(+), 31 deletions(-)
+
+diff --git a/fs/exec.c b/fs/exec.c
+index 7bfbde37ce3..858853a4a10 100644
+--- a/fs/exec.c
++++ b/fs/exec.c
+@@ -110,13 +110,14 @@ SYSCALL_DEFINE1(uselib, const char __user *, library)
+ 	static const struct open_flags uselib_flags = {
+ 		.open_flag = O_LARGEFILE | O_RDONLY | __FMODE_EXEC,
+ 		.acc_mode = MAY_READ | MAY_EXEC | MAY_OPEN,
+-		.intent = LOOKUP_OPEN
++		.intent = LOOKUP_OPEN,
++		.lookup_flags = LOOKUP_FOLLOW,
+ 	};
+ 
+ 	if (IS_ERR(tmp))
+ 		goto out;
+ 
+-	file = do_filp_open(AT_FDCWD, tmp, &uselib_flags, LOOKUP_FOLLOW);
++	file = do_filp_open(AT_FDCWD, tmp, &uselib_flags);
+ 	putname(tmp);
+ 	error = PTR_ERR(file);
+ 	if (IS_ERR(file))
+@@ -776,10 +777,11 @@ struct file *open_exec(const char *name)
+ 	static const struct open_flags open_exec_flags = {
+ 		.open_flag = O_LARGEFILE | O_RDONLY | __FMODE_EXEC,
+ 		.acc_mode = MAY_EXEC | MAY_OPEN,
+-		.intent = LOOKUP_OPEN
++		.intent = LOOKUP_OPEN,
++		.lookup_flags = LOOKUP_FOLLOW,
+ 	};
+ 
+-	file = do_filp_open(AT_FDCWD, &tmp, &open_exec_flags, LOOKUP_FOLLOW);
++	file = do_filp_open(AT_FDCWD, &tmp, &open_exec_flags);
+ 	if (IS_ERR(file))
+ 		goto out;
+ 
+diff --git a/fs/internal.h b/fs/internal.h
+index 3e9c2727122..4f7300dee23 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -95,11 +95,12 @@ struct open_flags {
+ 	umode_t mode;
+ 	int acc_mode;
+ 	int intent;
++	int lookup_flags;
+ };
+ extern struct file *do_filp_open(int dfd, struct filename *pathname,
+-		const struct open_flags *op, int flags);
++		const struct open_flags *op);
+ extern struct file *do_file_open_root(struct dentry *, struct vfsmount *,
+-		const char *, const struct open_flags *, int lookup_flags);
++		const char *, const struct open_flags *);
+ 
+ extern long do_handle_open(int mountdirfd,
+ 			   struct file_handle __user *ufh, int open_flag);
+diff --git a/fs/namei.c b/fs/namei.c
+index e9627a7d90e..917b038d464 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -3042,9 +3042,10 @@ out:
+ }
+ 
+ struct file *do_filp_open(int dfd, struct filename *pathname,
+-		const struct open_flags *op, int flags)
++		const struct open_flags *op)
+ {
+ 	struct nameidata nd;
++	int flags = op->lookup_flags;
+ 	struct file *filp;
+ 
+ 	filp = path_openat(dfd, pathname, &nd, op, flags | LOOKUP_RCU);
+@@ -3056,17 +3057,16 @@ struct file *do_filp_open(int dfd, struct filename *pathname,
+ }
+ 
+ struct file *do_file_open_root(struct dentry *dentry, struct vfsmount *mnt,
+-		const char *name, const struct open_flags *op, int flags)
++		const char *name, const struct open_flags *op)
+ {
+ 	struct nameidata nd;
+ 	struct file *file;
+ 	struct filename filename = { .name = name };
++	int flags = op->lookup_flags | LOOKUP_ROOT;
+ 
+ 	nd.root.mnt = mnt;
+ 	nd.root.dentry = dentry;
+ 
+-	flags |= LOOKUP_ROOT;
+-
+ 	if (dentry->d_inode->i_op->follow_link && op->intent & LOOKUP_OPEN)
+ 		return ERR_PTR(-ELOOP);
+ 
+diff --git a/fs/open.c b/fs/open.c
+index 4bf18067c8e..55f2db36b41 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -875,7 +875,8 @@ static inline int build_open_flags(int flags, umode_t mode, struct open_flags *o
+ 		lookup_flags |= LOOKUP_DIRECTORY;
+ 	if (!(flags & O_NOFOLLOW))
+ 		lookup_flags |= LOOKUP_FOLLOW;
+-	return lookup_flags;
++	op->lookup_flags = lookup_flags;
++	return 0;
+ }
+ 
+ /**
+@@ -892,8 +893,8 @@ static inline int build_open_flags(int flags, umode_t mode, struct open_flags *o
+ struct file *file_open_name(struct filename *name, int flags, umode_t mode)
+ {
+ 	struct open_flags op;
+-	int lookup = build_open_flags(flags, mode, &op);
+-	return do_filp_open(AT_FDCWD, name, &op, lookup);
++	int err = build_open_flags(flags, mode, &op);
++	return err ? ERR_PTR(err) : do_filp_open(AT_FDCWD, name, &op);
+ }
+ 
+ /**
+@@ -918,37 +919,43 @@ struct file *file_open_root(struct dentry *dentry, struct vfsmount *mnt,
+ 			    const char *filename, int flags)
+ {
+ 	struct open_flags op;
+-	int lookup = build_open_flags(flags, 0, &op);
++	int err = build_open_flags(flags, 0, &op);
++	if (err)
++		return ERR_PTR(err);
+ 	if (flags & O_CREAT)
+ 		return ERR_PTR(-EINVAL);
+ 	if (!filename && (flags & O_DIRECTORY))
+ 		if (!dentry->d_inode->i_op->lookup)
+ 			return ERR_PTR(-ENOTDIR);
+-	return do_file_open_root(dentry, mnt, filename, &op, lookup);
++	return do_file_open_root(dentry, mnt, filename, &op);
+ }
+ EXPORT_SYMBOL(file_open_root);
+ 
+ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
+ {
+ 	struct open_flags op;
+-	int lookup = build_open_flags(flags, mode, &op);
+-	struct filename *tmp = getname(filename);
+-	int fd = PTR_ERR(tmp);
+-
+-	if (!IS_ERR(tmp)) {
+-		fd = get_unused_fd_flags(flags);
+-		if (fd >= 0) {
+-			struct file *f = do_filp_open(dfd, tmp, &op, lookup);
+-			if (IS_ERR(f)) {
+-				put_unused_fd(fd);
+-				fd = PTR_ERR(f);
+-			} else {
+-				fsnotify_open(f);
+-				fd_install(fd, f);
+-			}
++	int fd = build_open_flags(flags, mode, &op);
++	struct filename *tmp;
++
++	if (fd)
++		return fd;
++
++	tmp = getname(filename);
++	if (IS_ERR(tmp))
++		return PTR_ERR(tmp);
++
++	fd = get_unused_fd_flags(flags);
++	if (fd >= 0) {
++		struct file *f = do_filp_open(dfd, tmp, &op);
++		if (IS_ERR(f)) {
++			put_unused_fd(fd);
++			fd = PTR_ERR(f);
++		} else {
++			fsnotify_open(f);
++			fd_install(fd, f);
+ 		}
+-		putname(tmp);
+ 	}
++	putname(tmp);
+ 	return fd;
+ }
+ 
+-- 
+2.25.1
+
+
+From a4a06d9e211611f5729840744791b466e9235f58 Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Fri, 7 Jun 2013 01:20:27 -0400
+Subject: [PATCH 04/16] [O_TMPFILE] it's still short a few helpers, but
+ infrastructure should be OK now...
+
+Change-Id: I9e003fabb858fd901fd922cd891ca29966ccdf3a
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ arch/alpha/include/uapi/asm/fcntl.h  |  1 +
+ arch/parisc/include/uapi/asm/fcntl.h |  1 +
+ arch/sparc/include/uapi/asm/fcntl.h  |  1 +
+ fs/dcache.c                          | 16 ++++++++
+ fs/ext2/namei.c                      | 24 +++++++++++
+ fs/minix/namei.c                     | 13 ++++++
+ fs/namei.c                           | 60 ++++++++++++++++++++++++++++
+ fs/open.c                            | 14 ++++---
+ include/linux/dcache.h               |  2 +
+ include/linux/fs.h                   |  1 +
+ include/uapi/asm-generic/fcntl.h     |  4 ++
+ mm/shmem.c                           | 32 +++++++++++++++
+ 12 files changed, 164 insertions(+), 5 deletions(-)
+
+diff --git a/arch/alpha/include/uapi/asm/fcntl.h b/arch/alpha/include/uapi/asm/fcntl.h
+index 6d9e805f18a..dfdadb0b4be 100644
+--- a/arch/alpha/include/uapi/asm/fcntl.h
++++ b/arch/alpha/include/uapi/asm/fcntl.h
+@@ -32,6 +32,7 @@
+ #define O_SYNC		(__O_SYNC|O_DSYNC)
+ 
+ #define O_PATH		040000000
++#define O_TMPFILE	0100000000
+ 
+ #define F_GETLK		7
+ #define F_SETLK		8
+diff --git a/arch/parisc/include/uapi/asm/fcntl.h b/arch/parisc/include/uapi/asm/fcntl.h
+index 0304b92ccfe..cc61c475f27 100644
+--- a/arch/parisc/include/uapi/asm/fcntl.h
++++ b/arch/parisc/include/uapi/asm/fcntl.h
+@@ -20,6 +20,7 @@
+ #define O_INVISIBLE	004000000 /* invisible I/O, for DMAPI/XDSM */
+ 
+ #define O_PATH		020000000
++#define O_TMPFILE	040000000
+ 
+ #define F_GETLK64	8
+ #define F_SETLK64	9
+diff --git a/arch/sparc/include/uapi/asm/fcntl.h b/arch/sparc/include/uapi/asm/fcntl.h
+index d0b83f66f35..d73e5e008b0 100644
+--- a/arch/sparc/include/uapi/asm/fcntl.h
++++ b/arch/sparc/include/uapi/asm/fcntl.h
+@@ -35,6 +35,7 @@
+ #define O_SYNC		(__O_SYNC|O_DSYNC)
+ 
+ #define O_PATH		0x1000000
++#define O_TMPFILE	0x2000000
+ 
+ #define F_GETOWN	5	/*  for sockets. */
+ #define F_SETOWN	6	/*  for sockets. */
+diff --git a/fs/dcache.c b/fs/dcache.c
+index dcb875bdd1a..e985424c7b2 100644
+--- a/fs/dcache.c
++++ b/fs/dcache.c
+@@ -3052,6 +3052,22 @@ rename_retry:
+ 	goto again;
+ }
+ 
++void d_tmpfile(struct dentry *dentry, struct inode *inode)
++{
++	inode_dec_link_count(inode);
++	BUG_ON(dentry->d_name.name != dentry->d_iname ||
++		!hlist_unhashed(&dentry->d_u.d_alias) ||
++		!d_unlinked(dentry));
++	spin_lock(&dentry->d_parent->d_lock);
++	spin_lock_nested(&dentry->d_lock, DENTRY_D_LOCK_NESTED);
++	dentry->d_name.len = sprintf(dentry->d_iname, "#%llu",
++				(unsigned long long)inode->i_ino);
++	spin_unlock(&dentry->d_lock);
++	spin_unlock(&dentry->d_parent->d_lock);
++	d_instantiate(dentry, inode);
++}
++EXPORT_SYMBOL(d_tmpfile);
++
+ /**
+  * find_inode_number - check for dentry with name
+  * @dir: directory to check
+diff --git a/fs/ext2/namei.c b/fs/ext2/namei.c
+index 73b0d951983..256dd5f4c1c 100644
+--- a/fs/ext2/namei.c
++++ b/fs/ext2/namei.c
+@@ -119,6 +119,29 @@ static int ext2_create (struct inode * dir, struct dentry * dentry, umode_t mode
+ 	return ext2_add_nondir(dentry, inode);
+ }
+ 
++static int ext2_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
++{
++	struct inode *inode = ext2_new_inode(dir, mode, NULL);
++	if (IS_ERR(inode))
++		return PTR_ERR(inode);
++
++	inode->i_op = &ext2_file_inode_operations;
++	if (ext2_use_xip(inode->i_sb)) {
++		inode->i_mapping->a_ops = &ext2_aops_xip;
++		inode->i_fop = &ext2_xip_file_operations;
++	} else if (test_opt(inode->i_sb, NOBH)) {
++		inode->i_mapping->a_ops = &ext2_nobh_aops;
++		inode->i_fop = &ext2_file_operations;
++	} else {
++		inode->i_mapping->a_ops = &ext2_aops;
++		inode->i_fop = &ext2_file_operations;
++	}
++	mark_inode_dirty(inode);
++	d_tmpfile(dentry, inode);
++	unlock_new_inode(inode);
++	return 0;
++}
++
+ static int ext2_mknod (struct inode * dir, struct dentry *dentry, umode_t mode, dev_t rdev)
+ {
+ 	struct inode * inode;
+@@ -398,6 +421,7 @@ const struct inode_operations ext2_dir_inode_operations = {
+ #endif
+ 	.setattr	= ext2_setattr,
+ 	.get_acl	= ext2_get_acl,
++	.tmpfile	= ext2_tmpfile,
+ };
+ 
+ const struct inode_operations ext2_special_inode_operations = {
+diff --git a/fs/minix/namei.c b/fs/minix/namei.c
+index 0db73d9dd66..cd950e2331b 100644
+--- a/fs/minix/namei.c
++++ b/fs/minix/namei.c
+@@ -54,6 +54,18 @@ static int minix_mknod(struct inode * dir, struct dentry *dentry, umode_t mode,
+ 	return error;
+ }
+ 
++static int minix_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
++{
++	int error;
++	struct inode *inode = minix_new_inode(dir, mode, &error);
++	if (inode) {
++		minix_set_inode(inode, 0);
++		mark_inode_dirty(inode);
++		d_tmpfile(dentry, inode);
++	}
++	return error;
++}
++
+ static int minix_create(struct inode *dir, struct dentry *dentry, umode_t mode,
+ 		bool excl)
+ {
+@@ -254,4 +266,5 @@ const struct inode_operations minix_dir_inode_operations = {
+ 	.mknod		= minix_mknod,
+ 	.rename		= minix_rename,
+ 	.getattr	= minix_getattr,
++	.tmpfile	= minix_tmpfile,
+ };
+diff --git a/fs/namei.c b/fs/namei.c
+index 917b038d464..cf897d88564 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -2975,6 +2975,61 @@ stale_open:
+ 	goto retry_lookup;
+ }
+ 
++static int do_tmpfile(int dfd, struct filename *pathname,
++		struct nameidata *nd, int flags,
++		const struct open_flags *op,
++		struct file *file, int *opened)
++{
++	static const struct qstr name = QSTR_INIT("/", 1);
++	struct dentry *dentry, *child;
++	struct inode *dir;
++	int error = path_lookupat(dfd, pathname->name,
++				  flags | LOOKUP_DIRECTORY, nd);
++	if (unlikely(error))
++		return error;
++	error = mnt_want_write(nd->path.mnt);
++	if (unlikely(error))
++		goto out;
++	/* we want directory to be writable */
++	error = inode_permission(nd->inode, MAY_WRITE | MAY_EXEC);
++	if (error)
++		goto out2;
++	dentry = nd->path.dentry;
++	dir = dentry->d_inode;
++	if (!dir->i_op->tmpfile) {
++		error = -EOPNOTSUPP;
++		goto out2;
++	}
++	child = d_alloc(dentry, &name);
++	if (unlikely(!child)) {
++		error = -ENOMEM;
++		goto out2;
++	}
++	nd->flags &= ~LOOKUP_DIRECTORY;
++	nd->flags |= op->intent;
++	dput(nd->path.dentry);
++	nd->path.dentry = child;
++	error = dir->i_op->tmpfile(dir, nd->path.dentry, op->mode);
++	if (error)
++		goto out2;
++	audit_inode(pathname, nd->path.dentry, 0);
++	error = may_open(&nd->path, op->acc_mode, op->open_flag);
++	if (error)
++		goto out2;
++	file->f_path.mnt = nd->path.mnt;
++	error = finish_open(file, nd->path.dentry, NULL, opened);
++	if (error)
++		goto out2;
++	error = open_check_o_direct(file);
++	if (error)
++		fput(file);
++out2:
++	mnt_drop_write(nd->path.mnt);
++out:
++	path_put(&nd->path);
++	return error;
++}
++
+ static struct file *path_openat(int dfd, struct filename *pathname,
+ 		struct nameidata *nd, const struct open_flags *op, int flags)
+ {
+@@ -2990,6 +3045,11 @@ static struct file *path_openat(int dfd, struct filename *pathname,
+ 
+ 	file->f_flags = op->open_flag;
+ 
++	if (unlikely(file->f_flags & O_TMPFILE)) {
++		error = do_tmpfile(dfd, pathname, nd, flags, op, file, &opened);
++		goto out;
++	}
++
+ 	error = path_init(dfd, pathname->name, flags | LOOKUP_PARENT, nd, &base);
+ 	if (unlikely(error))
+ 		goto out;
+diff --git a/fs/open.c b/fs/open.c
+index 55f2db36b41..32e73a76b20 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -839,11 +839,15 @@ static inline int build_open_flags(int flags, umode_t mode, struct open_flags *o
+ 	if (flags & __O_SYNC)
+ 		flags |= O_DSYNC;
+ 
+-	/*
+-	 * If we have O_PATH in the open flag. Then we
+-	 * cannot have anything other than the below set of flags
+-	 */
+-	if (flags & O_PATH) {
++	if (flags & O_TMPFILE) {
++		if (!(flags & O_CREAT))
++			return -EINVAL;
++		acc_mode = MAY_OPEN | ACC_MODE(flags);
++	} else if (flags & O_PATH) {
++		/*
++		 * If we have O_PATH in the open flag. Then we
++		 * cannot have anything other than the below set of flags
++		 */
+ 		flags &= O_DIRECTORY | O_NOFOLLOW | O_PATH;
+ 		acc_mode = 0;
+ 	} else {
+diff --git a/include/linux/dcache.h b/include/linux/dcache.h
+index eec769019fe..d461728ad6b 100644
+--- a/include/linux/dcache.h
++++ b/include/linux/dcache.h
+@@ -249,6 +249,8 @@ extern struct dentry * d_make_root(struct inode *);
+ /* <clickety>-<click> the ramfs-type tree */
+ extern void d_genocide(struct dentry *);
+ 
++extern void d_tmpfile(struct dentry *, struct inode *);
++
+ extern struct dentry *d_find_alias(struct inode *);
+ extern void d_prune_aliases(struct inode *);
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index f641a0faeff..31b53632018 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1640,6 +1640,7 @@ struct inode_operations {
+ 	int (*atomic_open)(struct inode *, struct dentry *,
+ 			   struct file *, unsigned open_flag,
+ 			   umode_t create_mode, int *opened);
++	int (*tmpfile) (struct inode *, struct dentry *, umode_t);
+ } ____cacheline_aligned;
+ 
+ ssize_t rw_copy_check_uvector(int type, const struct iovec __user * uvector,
+diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
+index a48937d4a5e..06632beaa6d 100644
+--- a/include/uapi/asm-generic/fcntl.h
++++ b/include/uapi/asm-generic/fcntl.h
+@@ -84,6 +84,10 @@
+ #define O_PATH		010000000
+ #endif
+ 
++#ifndef O_TMPFILE
++#define O_TMPFILE	020000000
++#endif
++
+ #ifndef O_NDELAY
+ #define O_NDELAY	O_NONBLOCK
+ #endif
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 34770f71012..633fc66dba4 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -2298,6 +2298,37 @@ shmem_mknod(struct inode *dir, struct dentry *dentry, umode_t mode, dev_t dev)
+ 	return error;
+ }
+ 
++static int
++shmem_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
++{
++	struct inode *inode;
++	int error = -ENOSPC;
++
++	inode = shmem_get_inode(dir->i_sb, dir, mode, 0, VM_NORESERVE);
++	if (inode) {
++		error = security_inode_init_security(inode, dir,
++						     NULL,
++						     shmem_initxattrs, NULL);
++		if (error) {
++			if (error != -EOPNOTSUPP) {
++				iput(inode);
++				return error;
++			}
++		}
++#ifdef CONFIG_TMPFS_POSIX_ACL
++		error = generic_acl_init(inode, dir);
++		if (error) {
++			iput(inode);
++			return error;
++		}
++#else
++		error = 0;
++#endif
++		d_tmpfile(dentry, inode);
++	}
++	return error;
++}
++
+ static int shmem_mkdir(struct inode *dir, struct dentry *dentry, umode_t mode)
+ {
+ 	int error;
+@@ -3129,6 +3160,7 @@ static const struct inode_operations shmem_dir_inode_operations = {
+ 	.rmdir		= shmem_rmdir,
+ 	.mknod		= shmem_mknod,
+ 	.rename		= shmem_rename,
++	.tmpfile	= shmem_tmpfile,
+ #endif
+ #ifdef CONFIG_TMPFS_XATTR
+ 	.setxattr	= shmem_setxattr,
+-- 
+2.25.1
+
+
+From 7537318f051d53e4f09d310f38a0eeb5bafcead0 Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Sat, 13 Jul 2013 13:26:37 +0400
+Subject: [PATCH 05/16] Safer ABI for O_TMPFILE
+
+[suggested by Rasmus Villemoes] make O_DIRECTORY | O_RDWR part of O_TMPFILE;
+that will fail on old kernels in a lot more cases than what I came up with.
+And make sure O_CREAT doesn't get there...
+
+Change-Id: I4818563d79ca1abf9ea99f5ccea9317eb2f3b678
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ arch/alpha/include/uapi/asm/fcntl.h  | 2 +-
+ arch/parisc/include/uapi/asm/fcntl.h | 2 +-
+ arch/sparc/include/uapi/asm/fcntl.h  | 2 +-
+ fs/namei.c                           | 2 +-
+ fs/open.c                            | 4 ++--
+ include/uapi/asm-generic/fcntl.h     | 8 ++++++--
+ 6 files changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/arch/alpha/include/uapi/asm/fcntl.h b/arch/alpha/include/uapi/asm/fcntl.h
+index dfdadb0b4be..09f49a6b87d 100644
+--- a/arch/alpha/include/uapi/asm/fcntl.h
++++ b/arch/alpha/include/uapi/asm/fcntl.h
+@@ -32,7 +32,7 @@
+ #define O_SYNC		(__O_SYNC|O_DSYNC)
+ 
+ #define O_PATH		040000000
+-#define O_TMPFILE	0100000000
++#define __O_TMPFILE	0100000000
+ 
+ #define F_GETLK		7
+ #define F_SETLK		8
+diff --git a/arch/parisc/include/uapi/asm/fcntl.h b/arch/parisc/include/uapi/asm/fcntl.h
+index cc61c475f27..34a46cbc76e 100644
+--- a/arch/parisc/include/uapi/asm/fcntl.h
++++ b/arch/parisc/include/uapi/asm/fcntl.h
+@@ -20,7 +20,7 @@
+ #define O_INVISIBLE	004000000 /* invisible I/O, for DMAPI/XDSM */
+ 
+ #define O_PATH		020000000
+-#define O_TMPFILE	040000000
++#define __O_TMPFILE	040000000
+ 
+ #define F_GETLK64	8
+ #define F_SETLK64	9
+diff --git a/arch/sparc/include/uapi/asm/fcntl.h b/arch/sparc/include/uapi/asm/fcntl.h
+index d73e5e008b0..7e8ace5bf76 100644
+--- a/arch/sparc/include/uapi/asm/fcntl.h
++++ b/arch/sparc/include/uapi/asm/fcntl.h
+@@ -35,7 +35,7 @@
+ #define O_SYNC		(__O_SYNC|O_DSYNC)
+ 
+ #define O_PATH		0x1000000
+-#define O_TMPFILE	0x2000000
++#define __O_TMPFILE	0x2000000
+ 
+ #define F_GETOWN	5	/*  for sockets. */
+ #define F_SETOWN	6	/*  for sockets. */
+diff --git a/fs/namei.c b/fs/namei.c
+index cf897d88564..2d95ea99a2e 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -3045,7 +3045,7 @@ static struct file *path_openat(int dfd, struct filename *pathname,
+ 
+ 	file->f_flags = op->open_flag;
+ 
+-	if (unlikely(file->f_flags & O_TMPFILE)) {
++	if (unlikely(file->f_flags & __O_TMPFILE)) {
+ 		error = do_tmpfile(dfd, pathname, nd, flags, op, file, &opened);
+ 		goto out;
+ 	}
+diff --git a/fs/open.c b/fs/open.c
+index 32e73a76b20..ca409a3e2d8 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -839,8 +839,8 @@ static inline int build_open_flags(int flags, umode_t mode, struct open_flags *o
+ 	if (flags & __O_SYNC)
+ 		flags |= O_DSYNC;
+ 
+-	if (flags & O_TMPFILE) {
+-		if (!(flags & O_CREAT))
++	if (flags & __O_TMPFILE) {
++		if ((flags & O_TMPFILE_MASK) != O_TMPFILE)
+ 			return -EINVAL;
+ 		acc_mode = MAY_OPEN | ACC_MODE(flags);
+ 	} else if (flags & O_PATH) {
+diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
+index 06632beaa6d..05ac354e124 100644
+--- a/include/uapi/asm-generic/fcntl.h
++++ b/include/uapi/asm-generic/fcntl.h
+@@ -84,10 +84,14 @@
+ #define O_PATH		010000000
+ #endif
+ 
+-#ifndef O_TMPFILE
+-#define O_TMPFILE	020000000
++#ifndef __O_TMPFILE
++#define __O_TMPFILE	020000000
+ #endif
+ 
++/* a horrid kludge trying to make sure that this will fail on old kernels */
++#define O_TMPFILE (__O_TMPFILE | O_DIRECTORY | O_RDWR)
++#define O_TMPFILE_MASK (__O_TMPFILE | O_DIRECTORY | O_CREAT | O_ACCMODE)      
++
+ #ifndef O_NDELAY
+ #define O_NDELAY	O_NONBLOCK
+ #endif
+-- 
+2.25.1
+
+
+From c11d2e8772d3a02fe2d2db49f3f1d629a26e3e85 Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Sat, 20 Jul 2013 03:11:32 +0400
+Subject: [PATCH 06/16] allow O_TMPFILE to work with O_WRONLY
+
+Change-Id: If75a4f1b8f1ba485f6073be4058b59126cef034b
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/open.c                        | 2 ++
+ include/uapi/asm-generic/fcntl.h | 4 ++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/fs/open.c b/fs/open.c
+index ca409a3e2d8..78bf6750d35 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -843,6 +843,8 @@ static inline int build_open_flags(int flags, umode_t mode, struct open_flags *o
+ 		if ((flags & O_TMPFILE_MASK) != O_TMPFILE)
+ 			return -EINVAL;
+ 		acc_mode = MAY_OPEN | ACC_MODE(flags);
++		if (!(acc_mode & MAY_WRITE))
++			return -EINVAL;
+ 	} else if (flags & O_PATH) {
+ 		/*
+ 		 * If we have O_PATH in the open flag. Then we
+diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
+index 05ac354e124..95e46c8e05f 100644
+--- a/include/uapi/asm-generic/fcntl.h
++++ b/include/uapi/asm-generic/fcntl.h
+@@ -89,8 +89,8 @@
+ #endif
+ 
+ /* a horrid kludge trying to make sure that this will fail on old kernels */
+-#define O_TMPFILE (__O_TMPFILE | O_DIRECTORY | O_RDWR)
+-#define O_TMPFILE_MASK (__O_TMPFILE | O_DIRECTORY | O_CREAT | O_ACCMODE)      
++#define O_TMPFILE (__O_TMPFILE | O_DIRECTORY)
++#define O_TMPFILE_MASK (__O_TMPFILE | O_DIRECTORY | O_CREAT)      
+ 
+ #ifndef O_NDELAY
+ #define O_NDELAY	O_NONBLOCK
+-- 
+2.25.1
+
+
+From 88129b13c461703382573a4e13a0dea432c82d0a Mon Sep 17 00:00:00 2001
+From: Zheng Liu <gnehzuil.liu@gmail.com>
+Date: Thu, 25 Jul 2013 08:13:19 +0800
+Subject: [PATCH 07/16] vfs: add missing check for __O_TMPFILE in fcntl_init()
+
+As comment in include/uapi/asm-generic/fcntl.h described, when
+introducing new O_* bits, we need to check its uniqueness in
+fcntl_init().  But __O_TMPFILE bit is missing.  So fix it.
+
+Change-Id: I372d41d2bc15b007595eaf763e200c4c06de177f
+Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/fcntl.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/fcntl.c b/fs/fcntl.c
+index e9e4ad90437..0ec0ab37e8c 100644
+--- a/fs/fcntl.c
++++ b/fs/fcntl.c
+@@ -735,14 +735,14 @@ static int __init fcntl_init(void)
+ 	 * Exceptions: O_NONBLOCK is a two bit define on parisc; O_NDELAY
+ 	 * is defined as O_NONBLOCK on some platforms and not on others.
+ 	 */
+-	BUILD_BUG_ON(19 - 1 /* for O_RDONLY being 0 */ != HWEIGHT32(
++	BUILD_BUG_ON(20 - 1 /* for O_RDONLY being 0 */ != HWEIGHT32(
+ 		O_RDONLY	| O_WRONLY	| O_RDWR	|
+ 		O_CREAT		| O_EXCL	| O_NOCTTY	|
+ 		O_TRUNC		| O_APPEND	| /* O_NONBLOCK	| */
+ 		__O_SYNC	| O_DSYNC	| FASYNC	|
+ 		O_DIRECT	| O_LARGEFILE	| O_DIRECTORY	|
+ 		O_NOFOLLOW	| O_NOATIME	| O_CLOEXEC	|
+-		__FMODE_EXEC	| O_PATH
++		__FMODE_EXEC	| O_PATH	| __O_TMPFILE
+ 		));
+ 
+ 	fasync_cache = kmem_cache_create("fasync_cache",
+-- 
+2.25.1
+
+
+From 5b032512d98da2553deeceeb77165eece6e51f2c Mon Sep 17 00:00:00 2001
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Thu, 1 Aug 2013 21:07:52 -0700
+Subject: [PATCH 08/16] fs: Fix file mode for O_TMPFILE
+
+O_TMPFILE, like O_CREAT, should respect the requested mode and should
+create regular files.
+
+This fixes two bugs: O_TMPFILE required privilege (because the mode
+ended up as 000) and it produced bogus inodes with no type.
+
+Change-Id: I4d045c5b3a07e3d3114897c5f3d2448ab6c3a0a5
+Signed-off-by: Andy Lutomirski <luto@amacapital.net>
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/open.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/open.c b/fs/open.c
+index 78bf6750d35..e151846975b 100644
+--- a/fs/open.c
++++ b/fs/open.c
+@@ -822,7 +822,7 @@ static inline int build_open_flags(int flags, umode_t mode, struct open_flags *o
+ 	int lookup_flags = 0;
+ 	int acc_mode;
+ 
+-	if (flags & O_CREAT)
++	if (flags & (O_CREAT | __O_TMPFILE))
+ 		op->mode = (mode & S_IALLUGO) | S_IFREG;
+ 	else
+ 		op->mode = 0;
+-- 
+2.25.1
+
+
+From a18fda03e105dbdcd903b96c128a084bf5c672b4 Mon Sep 17 00:00:00 2001
+From: Eric Rannaud <e@nanocritical.com>
+Date: Thu, 30 Oct 2014 01:51:01 -0700
+Subject: [PATCH 09/16] fs: allow open(dir, O_TMPFILE|..., 0) with mode 0
+
+The man page for open(2) indicates that when O_CREAT is specified, the
+'mode' argument applies only to future accesses to the file:
+
+	Note that this mode applies only to future accesses of the newly
+	created file; the open() call that creates a read-only file
+	may well return a read/write file descriptor.
+
+The man page for open(2) implies that 'mode' is treated identically by
+O_CREAT and O_TMPFILE.
+
+O_TMPFILE, however, behaves differently:
+
+	int fd = open("/tmp", O_TMPFILE | O_RDWR, 0);
+	assert(fd == -1);
+	assert(errno == EACCES);
+
+	int fd = open("/tmp", O_TMPFILE | O_RDWR, 0600);
+	assert(fd > 0);
+
+For O_CREAT, do_last() sets acc_mode to MAY_OPEN only:
+
+	if (*opened & FILE_CREATED) {
+		/* Don't check for write permission, don't truncate */
+		open_flag &= ~O_TRUNC;
+		will_truncate = false;
+		acc_mode = MAY_OPEN;
+		path_to_nameidata(path, nd);
+		goto finish_open_created;
+	}
+
+But for O_TMPFILE, do_tmpfile() passes the full op->acc_mode to
+may_open().
+
+This patch lines up the behavior of O_TMPFILE with O_CREAT. After the
+inode is created, may_open() is called with acc_mode = MAY_OPEN, in
+do_tmpfile().
+
+A different, but related glibc bug revealed the discrepancy:
+https://sourceware.org/bugzilla/show_bug.cgi?id=17523
+
+The glibc lazily loads the 'mode' argument of open() and openat() using
+va_arg() only if O_CREAT is present in 'flags' (to support both the 2
+argument and the 3 argument forms of open; same idea for openat()).
+However, the glibc ignores the 'mode' argument if O_TMPFILE is in
+'flags'.
+
+On x86_64, for open(), it magically works anyway, as 'mode' is in
+RDX when entering open(), and is still in RDX on SYSCALL, which is where
+the kernel looks for the 3rd argument of a syscall.
+
+But openat() is not quite so lucky: 'mode' is in RCX when entering the
+glibc wrapper for openat(), while the kernel looks for the 4th argument
+of a syscall in R10. Indeed, the syscall calling convention differs from
+the regular calling convention in this respect on x86_64. So the kernel
+sees mode = 0 when trying to use glibc openat() with O_TMPFILE, and
+fails with EACCES.
+
+Change-Id: If41388897576291d3cfb0515fd71efb70bf2b3df
+Signed-off-by: Eric Rannaud <e@nanocritical.com>
+Acked-by: Andy Lutomirski <luto@amacapital.net>
+Cc: stable@vger.kernel.org
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ fs/namei.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/namei.c b/fs/namei.c
+index 2d95ea99a2e..dd30394a71b 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -3013,7 +3013,8 @@ static int do_tmpfile(int dfd, struct filename *pathname,
+ 	if (error)
+ 		goto out2;
+ 	audit_inode(pathname, nd->path.dentry, 0);
+-	error = may_open(&nd->path, op->acc_mode, op->open_flag);
++	/* Don't check for other permissions, the inode was just created */
++	error = may_open(&nd->path, MAY_OPEN, op->open_flag);
+ 	if (error)
+ 		goto out2;
+ 	file->f_path.mnt = nd->path.mnt;
+-- 
+2.25.1
+
+
+From 1698f242e6ebf062302fdf82f2373db911e7e1cd Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Fri, 8 May 2015 22:53:15 -0400
+Subject: [PATCH 10/16] path_openat(): fix double fput()
+
+[ Upstream commit f15133df088ecadd141ea1907f2c96df67c729f0 ]
+
+path_openat() jumps to the wrong place after do_tmpfile() - it has
+already done path_cleanup() (as part of path_lookupat() called by
+do_tmpfile()), so doing that again can lead to double fput().
+
+Change-Id: Ia74c130ae5e379b512532c0feebea871b5f73668
+Cc: stable@vger.kernel.org	# v3.11+
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
+---
+ fs/namei.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/fs/namei.c b/fs/namei.c
+index dd30394a71b..4bb28de2a8d 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -3048,7 +3048,7 @@ static struct file *path_openat(int dfd, struct filename *pathname,
+ 
+ 	if (unlikely(file->f_flags & __O_TMPFILE)) {
+ 		error = do_tmpfile(dfd, pathname, nd, flags, op, file, &opened);
+-		goto out;
++		goto out2;
+ 	}
+ 
+ 	error = path_init(dfd, pathname->name, flags | LOOKUP_PARENT, nd, &base);
+@@ -3086,6 +3086,7 @@ out:
+ 		path_put(&nd->root);
+ 	if (base)
+ 		fput(base);
++out2:
+ 	if (!(opened & FILE_OPENED)) {
+ 		BUG_ON(!error);
+ 		put_filp(file);
+-- 
+2.25.1
+
+
+From 35e3a06e600b4108703e4da10da9ef8d814faadb Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Tue, 11 Jun 2013 08:34:36 +0400
+Subject: [PATCH 11/16] allow the temp files created by open() to be linked to
+
+O_TMPFILE | O_CREAT => linkat() with AT_SYMLINK_FOLLOW and /proc/self/fd/<n>
+as oldpath (i.e. flink()) will create a link
+O_TMPFILE | O_CREAT | O_EXCL => ENOENT on attempt to link those guys
+
+Change-Id: I5e28485680c3320cd0fccc0ba1bea8b963fca7fe
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/inode.c         |  4 +++-
+ fs/namei.c         | 16 ++++++++++++++--
+ include/linux/fs.h |  1 +
+ 3 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/fs/inode.c b/fs/inode.c
+index 8f1f4dc405f..fb39c629432 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -335,8 +335,10 @@ EXPORT_SYMBOL(set_nlink);
+  */
+ void inc_nlink(struct inode *inode)
+ {
+-	if (WARN_ON(inode->i_nlink == 0))
++	if (unlikely(inode->i_nlink == 0)) {
++		WARN_ON(!(inode->i_state & I_LINKABLE));
+ 		atomic_long_dec(&inode->i_sb->s_remove_count);
++	}
+ 
+ 	inode->__i_nlink++;
+ }
+diff --git a/fs/namei.c b/fs/namei.c
+index 4bb28de2a8d..c3ee4ff0b3d 100644
+--- a/fs/namei.c
++++ b/fs/namei.c
+@@ -3022,8 +3022,14 @@ static int do_tmpfile(int dfd, struct filename *pathname,
+ 	if (error)
+ 		goto out2;
+ 	error = open_check_o_direct(file);
+-	if (error)
++	if (error) {
+ 		fput(file);
++	} else if (!(op->open_flag & O_EXCL)) {
++		struct inode *inode = file_inode(file);
++		spin_lock(&inode->i_lock);
++		inode->i_state |= I_LINKABLE;
++		spin_unlock(&inode->i_lock);
++	}
+ out2:
+ 	mnt_drop_write(nd->path.mnt);
+ out:
+@@ -3745,12 +3751,18 @@ int vfs_link2(struct vfsmount *mnt, struct dentry *old_dentry, struct inode *dir
+ 
+ 	mutex_lock(&inode->i_mutex);
+ 	/* Make sure we don't allow creating hardlink to an unlinked file */
+-	if (inode->i_nlink == 0)
++	if (inode->i_nlink == 0 && !(inode->i_state & I_LINKABLE))
+ 		error =  -ENOENT;
+ 	else if (max_links && inode->i_nlink >= max_links)
+ 		error = -EMLINK;
+ 	else
+ 		error = dir->i_op->link(old_dentry, dir, new_dentry);
++
++	if (!error && (inode->i_state & I_LINKABLE)) {
++		spin_lock(&inode->i_lock);
++		inode->i_state &= ~I_LINKABLE;
++		spin_unlock(&inode->i_lock);
++	}
+ 	mutex_unlock(&inode->i_mutex);
+ 	if (!error)
+ 		fsnotify_link(dir, inode, new_dentry);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 31b53632018..8f1840ce4c9 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1811,6 +1811,7 @@ struct super_operations {
+ #define I_DIRTY_TIME		(1 << 11)
+ #define __I_DIRTY_TIME_EXPIRED	12
+ #define I_DIRTY_TIME_EXPIRED	(1 << __I_DIRTY_TIME_EXPIRED)
++#define I_LINKABLE		(1 << 10)
+ 
+ #define I_DIRTY (I_DIRTY_SYNC | I_DIRTY_DATASYNC | I_DIRTY_PAGES)
+ #define I_DIRTY_ALL (I_DIRTY | I_DIRTY_TIME)
+-- 
+2.25.1
+
+
+From cd1c7ee7027f9dfdb9dbcbf24b16e7335e5ac931 Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Tue, 11 Jun 2013 12:52:02 +0400
+Subject: [PATCH 12/16] ext3 ->tmpfile() support
+
+In this case we do need a bit more than usual, due to orphan
+list handling.
+
+Change-Id: I355e9c97e04a03f89bb760009fecc160b25caeb7
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/ext3/namei.c | 47 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 46 insertions(+), 1 deletion(-)
+
+diff --git a/fs/ext3/namei.c b/fs/ext3/namei.c
+index cea8ecf3e76..998ea111e53 100644
+--- a/fs/ext3/namei.c
++++ b/fs/ext3/namei.c
+@@ -1759,6 +1759,45 @@ retry:
+ 	return err;
+ }
+ 
++static int ext3_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
++{
++	handle_t *handle;
++	struct inode *inode;
++	int err, retries = 0;
++
++	dquot_initialize(dir);
++
++retry:
++	handle = ext3_journal_start(dir, EXT3_MAXQUOTAS_INIT_BLOCKS(dir->i_sb) +
++			  4 + EXT3_XATTR_TRANS_BLOCKS);
++
++	if (IS_ERR(handle))
++		return PTR_ERR(handle);
++
++	inode = ext3_new_inode (handle, dir, NULL, mode);
++	err = PTR_ERR(inode);
++	if (!IS_ERR(inode)) {
++		inode->i_op = &ext3_file_inode_operations;
++		inode->i_fop = &ext3_file_operations;
++		ext3_set_aops(inode);
++		err = ext3_orphan_add(handle, inode);
++		if (err)
++			goto err_drop_inode;
++		mark_inode_dirty(inode);
++		d_tmpfile(dentry, inode);
++		unlock_new_inode(inode);
++	}
++	ext3_journal_stop(handle);
++	if (err == -ENOSPC && ext3_should_retry_alloc(dir->i_sb, &retries))
++		goto retry;
++	return err;
++err_drop_inode:
++	ext3_journal_stop(handle);
++	unlock_new_inode(inode);
++	iput(inode);
++	return err;
++}
++
+ static int ext3_mkdir(struct inode * dir, struct dentry * dentry, umode_t mode)
+ {
+ 	handle_t *handle;
+@@ -2300,7 +2339,7 @@ static int ext3_link (struct dentry * old_dentry,
+ 
+ retry:
+ 	handle = ext3_journal_start(dir, EXT3_DATA_TRANS_BLOCKS(dir->i_sb) +
+-					EXT3_INDEX_EXTRA_TRANS_BLOCKS);
++					EXT3_INDEX_EXTRA_TRANS_BLOCKS + 1);
+ 	if (IS_ERR(handle))
+ 		return PTR_ERR(handle);
+ 
+@@ -2314,6 +2353,11 @@ retry:
+ 	err = ext3_add_entry(handle, dentry, inode);
+ 	if (!err) {
+ 		ext3_mark_inode_dirty(handle, inode);
++		/* this can happen only for tmpfile being
++		 * linked the first time
++		 */
++		if (inode->i_nlink == 1)
++			ext3_orphan_del(handle, inode);
+ 		d_instantiate(dentry, inode);
+ 	} else {
+ 		drop_nlink(inode);
+@@ -2516,6 +2560,7 @@ const struct inode_operations ext3_dir_inode_operations = {
+ 	.mkdir		= ext3_mkdir,
+ 	.rmdir		= ext3_rmdir,
+ 	.mknod		= ext3_mknod,
++	.tmpfile	= ext3_tmpfile,
+ 	.rename		= ext3_rename,
+ 	.setattr	= ext3_setattr,
+ #ifdef CONFIG_EXT3_FS_XATTR
+-- 
+2.25.1
+
+
+From 5eb26ae0709d32b97a1185e16ad9c002ccc69349 Mon Sep 17 00:00:00 2001
+From: Al Viro <viro@zeniv.linux.org.uk>
+Date: Sat, 29 Jun 2013 13:23:08 +0400
+Subject: [PATCH 13/16] ext4: ->tmpfile() support
+
+very similar to ext3 counterpart...
+
+Change-Id: Ibb9de458c172ad50c4c202b971cb7243c8e43c82
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/ext4/namei.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
+index 0f1141cd3c2..851b95ed765 100644
+--- a/fs/ext4/namei.c
++++ b/fs/ext4/namei.c
+@@ -2496,7 +2496,6 @@ retry:
+ 	return err;
+ }
+ 
+-#if 0
+ static int ext4_tmpfile(struct inode *dir, struct dentry *dentry, umode_t mode)
+ {
+ 	handle_t *handle;
+@@ -2517,11 +2516,11 @@ retry:
+ 		inode->i_op = &ext4_file_inode_operations;
+ 		inode->i_fop = &ext4_file_operations;
+ 		ext4_set_aops(inode);
+-		d_tmpfile(dentry, inode);
+ 		err = ext4_orphan_add(handle, inode);
+ 		if (err)
+-			goto err_unlock_inode;
++			goto err_drop_inode;
+ 		mark_inode_dirty(inode);
++		d_tmpfile(dentry, inode);
+ 		unlock_new_inode(inode);
+ 	}
+ 	if (handle)
+@@ -2529,12 +2528,12 @@ retry:
+ 	if (err == -ENOSPC && ext4_should_retry_alloc(dir->i_sb, &retries))
+ 		goto retry;
+ 	return err;
+-err_unlock_inode:
++err_drop_inode:
+ 	ext4_journal_stop(handle);
+ 	unlock_new_inode(inode);
++	iput(inode);
+ 	return err;
+ }
+-#endif
+ 
+ struct ext4_dir_entry_2 *ext4_init_dot_dotdot(struct inode *inode,
+ 			  struct ext4_dir_entry_2 *de,
+@@ -3810,9 +3809,7 @@ const struct inode_operations ext4_dir_inode_operations = {
+ 	.mkdir		= ext4_mkdir,
+ 	.rmdir		= ext4_rmdir,
+ 	.mknod		= ext4_mknod,
+-#if 0
+ 	.tmpfile	= ext4_tmpfile,
+-#endif
+ 	.rename		= ext4_rename2,
+ 	.setattr	= ext4_setattr,
+ 	.setxattr	= generic_setxattr,
+-- 
+2.25.1
+
+
+From d0711ad4462e4f672c5ce0dc48b028af6cb4f1b6 Mon Sep 17 00:00:00 2001
+From: Zheng Liu <wenqing.lz@taobao.com>
+Date: Sat, 20 Jul 2013 21:58:38 -0400
+Subject: [PATCH 14/16] ext4: fix a BUG when opening a file with O_TMPFILE flag
+
+When we try to open a file with O_TMPFILE flag, we will trigger a bug.
+The root cause is that in ext4_orphan_add() we check ->i_nlink == 0 and
+this check always fails because we set ->i_nlink = 1 in
+inode_init_always().  We can use the following program to trigger it:
+
+int main(int argc, char *argv[])
+{
+	int fd;
+
+	fd = open(argv[1], O_TMPFILE, 0666);
+	if (fd < 0) {
+		perror("open ");
+		return -1;
+	}
+	close(fd);
+	return 0;
+}
+
+The oops message looks like this:
+
+kernel BUG at fs/ext4/namei.c:2572!
+invalid opcode: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+Modules linked in: dlci bridge stp hidp cmtp kernelcapi l2tp_ppp l2tp_netlink l2tp_core sctp libcrc32c rfcomm tun fuse nfnetli
+nk can_raw ipt_ULOG can_bcm x25 scsi_transport_iscsi ipx p8023 p8022 appletalk phonet psnap vmw_vsock_vmci_transport af_key vmw_vmci rose vsock atm can netrom ax25 af_rxrpc ir
+da pppoe pppox ppp_generic slhc bluetooth nfc rfkill rds caif_socket caif crc_ccitt af_802154 llc2 llc snd_hda_codec_realtek snd_hda_intel snd_hda_codec serio_raw snd_pcm pcsp
+kr edac_core snd_page_alloc snd_timer snd soundcore r8169 mii sr_mod cdrom pata_atiixp radeon backlight drm_kms_helper ttm
+CPU: 1 PID: 1812571 Comm: trinity-child2 Not tainted 3.11.0-rc1+ #12
+Hardware name: Gigabyte Technology Co., Ltd. GA-MA78GM-S2H/GA-MA78GM-S2H, BIOS F12a 04/23/2010
+task: ffff88007dfe69a0 ti: ffff88010f7b6000 task.ti: ffff88010f7b6000
+RIP: 0010:[<ffffffff8125ce69>]  [<ffffffff8125ce69>] ext4_orphan_add+0x299/0x2b0
+RSP: 0018:ffff88010f7b7cf8  EFLAGS: 00010202
+RAX: 0000000000000000 RBX: ffff8800966d3020 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: ffff88007dfe70b8 RDI: 0000000000000001
+RBP: ffff88010f7b7d40 R08: ffff880126a3c4e0 R09: ffff88010f7b7ca0
+R10: 0000000000000000 R11: 0000000000000000 R12: ffff8801271fd668
+R13: ffff8800966d2f78 R14: ffff88011d7089f0 R15: ffff88007dfe69a0
+FS:  00007f70441a3740(0000) GS:ffff88012a800000(0000) knlGS:00000000f77c96c0
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000002834000 CR3: 0000000107964000 CR4: 00000000000007e0
+DR0: 0000000000780000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000600
+Stack:
+ 0000000000002000 00000020810b6dde 0000000000000000 ffff88011d46db00
+ ffff8800966d3020 ffff88011d7089f0 ffff88009c7f4c10 ffff88010f7b7f2c
+ ffff88007dfe69a0 ffff88010f7b7da8 ffffffff8125cfac ffff880100000004
+Call Trace:
+ [<ffffffff8125cfac>] ext4_tmpfile+0x12c/0x180
+ [<ffffffff811cba78>] path_openat+0x238/0x700
+ [<ffffffff8100afc4>] ? native_sched_clock+0x24/0x80
+ [<ffffffff811cc647>] do_filp_open+0x47/0xa0
+ [<ffffffff811db73f>] ? __alloc_fd+0xaf/0x200
+ [<ffffffff811ba2e4>] do_sys_open+0x124/0x210
+ [<ffffffff81010725>] ? syscall_trace_enter+0x25/0x290
+ [<ffffffff811ba3ee>] SyS_open+0x1e/0x20
+ [<ffffffff816ca8d4>] tracesys+0xdd/0xe2
+ [<ffffffff81001001>] ? start_thread_common.constprop.6+0x1/0xa0
+Code: 04 00 00 00 89 04 24 31 c0 e8 c4 77 04 00 e9 43 fe ff ff 66 25 00 d0 66 3d 00 80 0f 84 0e fe ff ff 83 7b 48 00 0f 84 04 fe ff ff <0f> 0b 49 8b 8c 24 50 07 00 00 e9 88 fe ff ff 0f 1f 84 00 00 00
+
+Here we couldn't call clear_nlink() directly because in d_tmpfile() we
+will call inode_dec_link_count() to decrease ->i_nlink.  So this commit
+tries to call d_tmpfile() before ext4_orphan_add() to fix this problem.
+
+Change-Id: Ie8a8009970d1e38c6863d94296f2738918da5429
+Reported-by: Dave Jones <davej@redhat.com>
+Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
+Tested-by: Darrick J. Wong <darrick.wong@oracle.com>
+Tested-by: Dave Jones <davej@redhat.com>
+Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
+Acked-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/ext4/namei.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
+index 851b95ed765..ec7b666d39c 100644
+--- a/fs/ext4/namei.c
++++ b/fs/ext4/namei.c
+@@ -2516,11 +2516,11 @@ retry:
+ 		inode->i_op = &ext4_file_inode_operations;
+ 		inode->i_fop = &ext4_file_operations;
+ 		ext4_set_aops(inode);
++		d_tmpfile(dentry, inode);
+ 		err = ext4_orphan_add(handle, inode);
+ 		if (err)
+ 			goto err_drop_inode;
+ 		mark_inode_dirty(inode);
+-		d_tmpfile(dentry, inode);
+ 		unlock_new_inode(inode);
+ 	}
+ 	if (handle)
+-- 
+2.25.1
+
+
+From d159ef42d936c07be2d7e0d70e36e69b577151b4 Mon Sep 17 00:00:00 2001
+From: Miklos Szeredi <mszeredi@suse.cz>
+Date: Thu, 10 Oct 2013 16:48:19 +0200
+Subject: [PATCH 15/16] ext[34]: fix double put in tmpfile
+
+d_tmpfile() already swallowed the inode ref.
+
+Change-Id: I22411f145d675948cff55b5a8cc3c0cd3a0d484c
+Signed-off-by: Miklos Szeredi <mszeredi@suse.cz>
+Cc: stable@vger.kernel.org
+Signed-off-by: Al Viro <viro@zeniv.linux.org.uk>
+---
+ fs/ext3/namei.c | 5 ++---
+ fs/ext4/namei.c | 5 ++---
+ 2 files changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/fs/ext3/namei.c b/fs/ext3/namei.c
+index 998ea111e53..4bdefbf4629 100644
+--- a/fs/ext3/namei.c
++++ b/fs/ext3/namei.c
+@@ -1782,7 +1782,7 @@ retry:
+ 		ext3_set_aops(inode);
+ 		err = ext3_orphan_add(handle, inode);
+ 		if (err)
+-			goto err_drop_inode;
++			goto err_unlock_inode;
+ 		mark_inode_dirty(inode);
+ 		d_tmpfile(dentry, inode);
+ 		unlock_new_inode(inode);
+@@ -1791,10 +1791,9 @@ retry:
+ 	if (err == -ENOSPC && ext3_should_retry_alloc(dir->i_sb, &retries))
+ 		goto retry;
+ 	return err;
+-err_drop_inode:
++err_unlock_inode:
+ 	ext3_journal_stop(handle);
+ 	unlock_new_inode(inode);
+-	iput(inode);
+ 	return err;
+ }
+ 
+diff --git a/fs/ext4/namei.c b/fs/ext4/namei.c
+index ec7b666d39c..acf345555a4 100644
+--- a/fs/ext4/namei.c
++++ b/fs/ext4/namei.c
+@@ -2519,7 +2519,7 @@ retry:
+ 		d_tmpfile(dentry, inode);
+ 		err = ext4_orphan_add(handle, inode);
+ 		if (err)
+-			goto err_drop_inode;
++			goto err_unlock_inode;
+ 		mark_inode_dirty(inode);
+ 		unlock_new_inode(inode);
+ 	}
+@@ -2528,10 +2528,9 @@ retry:
+ 	if (err == -ENOSPC && ext4_should_retry_alloc(dir->i_sb, &retries))
+ 		goto retry;
+ 	return err;
+-err_drop_inode:
++err_unlock_inode:
+ 	ext4_journal_stop(handle);
+ 	unlock_new_inode(inode);
+-	iput(inode);
+ 	return err;
+ }
+ 
+-- 
+2.25.1
+
+
+From 99f685b71e4dacdc0f02590bd43e2c03d5d5d272 Mon Sep 17 00:00:00 2001
+From: Ethan Chen <intervigil@gmail.com>
+Date: Mon, 3 Sep 2018 19:11:39 -0700
+Subject: [PATCH 16/16] uapi: Define __BITS_PER_LONG based on compiler target
+
+* We may compile 32-bit ARM code against these kernel headers in many
+  situations, so provide a compiler-defined method of obtaining the width
+  of long.
+
+Change-Id: Iac5e48200d70f1258ab3caca1a8f1eb6e8f7f2d3
+---
+ arch/arm64/include/uapi/asm/bitsperlong.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/include/uapi/asm/bitsperlong.h b/arch/arm64/include/uapi/asm/bitsperlong.h
+index fce9c2924fa..71f93d50bb2 100644
+--- a/arch/arm64/include/uapi/asm/bitsperlong.h
++++ b/arch/arm64/include/uapi/asm/bitsperlong.h
+@@ -16,7 +16,11 @@
+ #ifndef __ASM_BITSPERLONG_H
+ #define __ASM_BITSPERLONG_H
+ 
++#ifdef __aarch64__
+ #define __BITS_PER_LONG 64
++#else
++#define __BITS_PER_LONG 32
++#endif
+ 
+ #include <asm-generic/bitsperlong.h>
+ 
+-- 
+2.25.1
+
