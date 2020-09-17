@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
 
-# victara
+  # victara
   <project name="linckandrea/android_device_motorola_victara" path="device/motorola/victara" revision="lineage-17-optimized" remote="github" />
   <project name="linckandrea/Pop-kernel-victara" path="kernel/motorola/msm8974" revision="Q-r9-p" remote="github" />
-  <project name="TheMuppets/proprietary_vendor_motorola" path="vendor/motorola" revision="master" remote="github" />
+  <project name="TheMuppets/proprietary_vendor_motorola" path="vendor/motorola" revision="lineage-17.1" remote="github" />
 
 
   # bullhead
   <project name="linckandrea/android_device_lge_bullhead" path="device/lge/bullhead" remote="github" revision="lineage-17.1" />
-  <project name="linckandrea/Pop_kernel_bullhead" path="kernel/lge/bullhead" remote="github" revision="v6-t" />
+  <project name="linckandrea/Pop_kernel_bullhead" path="kernel/lge/bullhead" remote="github" revision="v6-t2" />
   <project name="Toomoch/android_vendor_lge_bullhead" path="vendor/lge/bullhead" remote="github" revision="lineage-17.1" />
 
 
@@ -20,6 +20,6 @@
 
 
   # custom compilers
-  <project name="QUVNTNM-TC/TC" path="prebuilts/custom-gcc/Q7.3-a15-neon" revision="Q7.3-a15-neon" remote="github" />
+  <project name="bacon-dev/prebuilts_gcc_linux-x86_arm_arm-eabi-linaro-7" path="prebuilts/custom-gcc/linux-x86/arm/arm-eabi-linaro-7" revision="master" remote="github" />
   <project name="arter97/arm64-gcc" path="prebuilts/custom-gcc/arm64-gcc" revision="master" remote="github" />
 </manifest>
