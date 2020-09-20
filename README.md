@@ -1,1 +1,1 @@
-local manifests for my persona use
+local manifests for my personal use
