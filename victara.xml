@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+
+	# victara
+	<project name="linckandrea/android_device_motorola_victara" path="device/motorola/victara" revision="lineage-17-optimized" remote="github" />
+	<project name="linckandrea/Pop-kernel-victara" path="kernel/motorola/msm8974" revision="Q-r9-p" remote="github" />
+	<project name="TheMuppets/proprietary_vendor_motorola" path="vendor/motorola" revision="lineage-17.1" remote="github" />
+	
+</manifest>
