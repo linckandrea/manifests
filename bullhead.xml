@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-
+	<remove-project name="LineageOS/android_hardware_qcom_gps" />
+	
   # bullhead
   <project name="linckandrea/android_device_lge_bullhead" path="device/lge/bullhead" remote="github" revision="lineage-17.1" />
   <project name="linckandrea/Pop_kernel_bullhead" path="kernel/lge/bullhead" remote="github" revision="v6-t2" />
   <project name="Toomoch/android_vendor_lge_bullhead" path="vendor/lge/bullhead" remote="github" revision="lineage-17.1" />
+  
+  # gps fix
+  <project name="linckandrea/hardware_qcom_gps_bullhead" path="hardware/qcom/gps" remote="github" revision="aex7.x" />
 
 </manifest>
