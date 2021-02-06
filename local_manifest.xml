@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+
+  <!-- Removals -->
+  <remove-project name="LineageOS/android_hardware_qcom_display" /> 
+  <remove-project name="LineageOS/android_hardware_qcom_gps" />
+  <remove-project name="LineageOS/android_hardware_qcom_bt" />
+  
+  <!-- HALS -->
+  <project name="Toomoch/android_hardware_qcom_display" path="hardware/qcom/display" remote="github" revision="lineage-17.1" />
+  <project name="Toomoch/android_hardware_qcom_gps" path="hardware/qcom/gps" remote="github" revision="lineage-17.1" />
+  <project name="Toomoch/android_hardware_qcom_bt" path="hardware/qcom/bt" remote="github" revision="lineage-17.1" />
+
+  <!-- Custom gcc -->
+  <project name="bacon-dev/prebuilts_gcc_linux-x86_arm_arm-eabi-linaro-7" path="prebuilts/custom-gcc/linux-x86/arm/arm-eabi-linaro-7" revision="master" remote="github" />
+  <project name="arter97/arm64-gcc" path="prebuilts/custom-gcc/arm64-gcc" revision="master" remote="github" />
+
+  <!-- Bullhead -->
+  <project name="linckandrea/android_device_lge_bullhead_old" path="device/lge/bullhead" remote="github" revision="lineage-17.1-opt" />
+  <project name="linckandrea/Pop_kernel_bullhead" path="kernel/lge/bullhead" remote="github" revision="v7" />
+  <project name="linckandrea/android_vendor_lge_bullhead" path="vendor/lge/bullhead" remote="github" revision="lineage-17.1" />
+  
+  <project name="LineageOS/android_device_motorola_victara" path="device/motorola/victara" remote="github" />
+  <project name="LineageOS/android_kernel_motorola_msm8974" path="kernel/motorola/msm8974" remote="github" />
+  <project name="LineageOS/android_system_qcom" path="system/qcom" remote="github" />
+  <project name="LineageOS/android_external_bson" path="external/bson" remote="github" />
+  <project name="LineageOS/android_hardware_sony_timekeep" path="hardware/sony/timekeep" remote="github" />
+</manifest>
