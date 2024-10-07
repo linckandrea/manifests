@@ -1,0 +1,44 @@
+From 69ef285ec9c191ccec55318784f1dcc2ad183841 Mon Sep 17 00:00:00 2001
+From: AndroidRul3z <ferrettidario@gmail.com>
+Date: Sun, 9 Nov 2014 18:34:05 +0100
+Subject: [PATCH 11/17] Turn off some debugs
+
+Change-Id: I36bd0034f6a0d7e674e97152ac35ec1961718527
+Signed-off-by: Chet Kener <Cl3Kener@gmail.com>
+Signed-off-by: Raleigh Matlock <raleighman2@gmail.com>
+Signed-off-by: spezi77 <spezi77@gmx.com>
+Signed-off-by: Genkzsz11 <Genkzsz11@gmail.com>
+---
+ media/java/android/media/Ringtone.java                          | 2 +-
+ .../src/com/android/systemui/statusbar/policy/DeadZone.java     | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/media/java/android/media/Ringtone.java b/media/java/android/media/Ringtone.java
+index d02b4969782..08da78c7531 100644
+--- a/media/java/android/media/Ringtone.java
++++ b/media/java/android/media/Ringtone.java
+@@ -46,7 +46,7 @@ import java.util.ArrayList;
+  */
+ public class Ringtone {
+     private static final String TAG = "Ringtone";
+-    private static final boolean LOGD = true;
++    private static final boolean LOGD = false;
+ 
+     private static final String[] MEDIA_COLUMNS = new String[] {
+         MediaStore.Audio.Media._ID,
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/policy/DeadZone.java b/packages/SystemUI/src/com/android/systemui/statusbar/policy/DeadZone.java
+index 54502e41ca6..4789ef405be 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/policy/DeadZone.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/policy/DeadZone.java
+@@ -43,7 +43,7 @@ public class DeadZone {
+     public static final int HORIZONTAL = 0;  // Consume taps along the top edge.
+     public static final int VERTICAL = 1;  // Consume taps along the left edge.
+ 
+-    private static final boolean CHATTY = true; // print to logcat when we eat a click
++    private static final boolean CHATTY = false; // print to logcat when we eat a click
+     private final NavigationBarController mNavBarController;
+     private final NavigationBarView mNavigationBarView;
+ 
+-- 
+2.43.0
+

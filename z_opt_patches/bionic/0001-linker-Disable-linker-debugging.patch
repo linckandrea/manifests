@@ -1,0 +1,34 @@
+From f0fdd5951d968c6f97ee49d3eb378a15c267e656 Mon Sep 17 00:00:00 2001
+From: Miguel Martinez <slverwolf@gmail.com>
+Date: Thu, 15 Feb 2018 08:10:00 -0600
+Subject: [PATCH 1/3] linker: Disable linker debugging
+
+We don't need debugging on..
+
+Change-Id: Ib56f705a76176c81c3fa2426b82e54e8298cea29
+---
+ linker/linker_debug.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/linker/linker_debug.h b/linker/linker_debug.h
+index 477b0092b..ddaf99116 100644
+--- a/linker/linker_debug.h
++++ b/linker/linker_debug.h
+@@ -38,10 +38,10 @@
+ // LINKER_DEBUG_TO_LOG to 0.
+ #define LINKER_DEBUG_TO_LOG  1
+ 
+-#define TRACE_DEBUG          1
+-#define DO_TRACE_LOOKUP      1
+-#define DO_TRACE_RELO        1
+-#define DO_TRACE_IFUNC       1
++#define TRACE_DEBUG          0
++#define DO_TRACE_LOOKUP      0
++#define DO_TRACE_RELO        0
++#define DO_TRACE_IFUNC       0
+ #define TIMING               0
+ #define STATS                0
+ 
+-- 
+2.43.0
+

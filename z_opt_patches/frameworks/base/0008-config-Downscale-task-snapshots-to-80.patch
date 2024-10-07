@@ -1,0 +1,30 @@
+From 324510431e0ee9b31ef5e5a7dcf6f5946a378466 Mon Sep 17 00:00:00 2001
+From: Danny Lin <danny@kdrag0n.dev>
+Date: Fri, 18 Sep 2020 09:11:38 -0700
+Subject: [PATCH 08/17] config: Downscale task snapshots to 80%
+
+This saves memory without a noticeable loss in quality.
+
+Extracted from the Pixel stock ROM.
+
+Change-Id: I9d2cf3890c4815f45b8ad6965d0ccb37c0a23b26
+---
+ core/res/res/values/config.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
+index f4efcc7e4ee..152000b0ae7 100644
+--- a/core/res/res/values/config.xml
++++ b/core/res/res/values/config.xml
+@@ -2668,7 +2668,7 @@
+     <string name="config_defaultNetworkScorerPackageName"></string>
+ 
+     <!-- The amount to scale fullscreen snapshots for Overview and snapshot starting windows. -->
+-    <item name="config_highResTaskSnapshotScale" format="float" type="dimen">1.0</item>
++    <item name="config_highResTaskSnapshotScale" format="float" type="dimen">0.8</item>
+ 
+     <!-- The amount to scale reduced scale snapshots for Overview and snapshot starting windows.
+          Reduced scale snapshots are loaded before full screen snapshots to improve load times and
+-- 
+2.43.0
+

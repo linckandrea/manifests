@@ -1,0 +1,121 @@
+From d7ff1f2e16060fd6bdab8ab2224a3a938f21e2e9 Mon Sep 17 00:00:00 2001
+From: xdnax <mikecoconut5832@gmail.com>
+Date: Fri, 28 Oct 2016 18:26:49 +0200
+Subject: [PATCH 04/17] base: use some google pixel colors
+
+Change-Id: I7c6257fb73fbefbde0e7a6f320ea918652335f5b
+Signed-off-by: mydongistiny <jaysonedson@gmail.com>
+---
+ core/res/res/values/colors.xml          | 34 ++++++++++++-------------
+ core/res/res/values/colors_material.xml | 16 +++++++-----
+ 2 files changed, 27 insertions(+), 23 deletions(-)
+
+diff --git a/core/res/res/values/colors.xml b/core/res/res/values/colors.xml
+index af41d586a8a..8a1a01d0d60 100644
+--- a/core/res/res/values/colors.xml
++++ b/core/res/res/values/colors.xml
+@@ -60,10 +60,10 @@
+     <color name="dim_foreground_light_inverse">#bebebe</color>
+     <color name="dim_foreground_light_inverse_disabled">#80bebebe</color>
+     <color name="hint_foreground_light">#808080</color>
+-    <color name="highlighted_text_dark">#9983CC39</color>
+-    <color name="highlighted_text_light">#9983CC39</color>
+-    <color name="link_text_dark">#5c5cff</color>
+-    <color name="link_text_light">#0000ee</color>
++    <color name="highlighted_text_dark">@color/material_pixel_blue_bright</color>
++    <color name="highlighted_text_light">@color/material_pixel_blue_bright</color>
++    <color name="link_text_dark">@color/material_pixel_blue_bright</color>
++    <color name="link_text_light">@color/material_pixel_blue_bright</color>
+     <color name="suggestion_highlight_text">#177bbd</color>
+ 
+     <drawable name="stat_notify_sync_noanim">@drawable/stat_notify_sync_anim0</drawable>
+@@ -164,7 +164,7 @@
+     <color name="accessibility_focus_highlight">#bf39b500</color>
+     <color name="autofilled_highlight">#4dffeb3b</color>
+ 
+-    <color name="system_notification_accent_color">#ff607D8B</color>
++    <color name="system_notification_accent_color">@color/material_pixel_blue_bright</color>
+ 
+     <!-- Default user icon colors -->
+     <color name="user_icon_1">@android:color/accent_device_default_light</color>
+@@ -191,18 +191,18 @@
+     <color name="instant_app_badge">#ff757575</color><!-- Grey -->
+ 
+     <!-- Multi-sim sim colors -->
+-    <color name="Teal_700">#ff00796b</color>
+-    <color name="Teal_800">#ff00695c</color>
+-    <color name="Blue_700">#ff3367d6</color>
+-    <color name="Blue_800">#ff2a56c6</color>
+-    <color name="Indigo_700">#ff303f9f</color>
+-    <color name="Indigo_800">#ff283593</color>
+-    <color name="Purple_700">#ff7b1fa2</color>
+-    <color name="Purple_800">#ff6a1b9a</color>
+-    <color name="Pink_700">#ffc2185b</color>
+-    <color name="Pink_800">#ffad1457</color>
+-    <color name="Red_700">#ffc53929</color>
+-    <color name="Red_800">#ffb93221</color>
++    <color name="Teal_700">@color/material_pixel_blue_light</color>
++    <color name="Teal_800">@color/material_pixel_blue_dark</color>
++    <color name="Blue_700">@color/material_pixel_blue_light</color>
++    <color name="Blue_800">@color/material_pixel_blue_dark</color>
++    <color name="Indigo_700">@color/material_pixel_blue_light</color>
++    <color name="Indigo_800">@color/material_pixel_blue_dark</color>
++    <color name="Purple_700">@color/material_pixel_blue_light</color>
++    <color name="Purple_800">@color/material_pixel_blue_dark</color>
++    <color name="Pink_700">@color/material_pixel_blue_light</color>
++    <color name="Pink_800">@color/material_pixel_blue_dark</color>
++    <color name="Red_700">@color/material_pixel_blue_light</color>
++    <color name="Red_800">@color/material_pixel_blue_dark</color>
+ 
+     <!-- Status bar color for semi transparent mode. -->
+     <color name="system_bar_background_semi_transparent">#66000000</color> <!-- 40% black -->
+diff --git a/core/res/res/values/colors_material.xml b/core/res/res/values/colors_material.xml
+index d357f010277..8d03b0feb98 100644
+--- a/core/res/res/values/colors_material.xml
++++ b/core/res/res/values/colors_material.xml
+@@ -39,8 +39,8 @@
+     <color name="tertiary_material_settings">@color/material_blue_grey_700</color>
+     <color name="quaternary_material_settings">@color/material_blue_grey_200</color>
+ 
+-    <color name="accent_material_light">@color/material_deep_teal_500</color>
+-    <color name="accent_material_dark">@color/material_deep_teal_200</color>
++    <color name="accent_material_light">@color/material_pixel_blue_bright</color>
++    <color name="accent_material_dark">@color/material_pixel_blue_bright</color>
+ 
+     <color name="button_material_dark">#ff5a595b</color>
+     <color name="button_material_light">#ffd6d7d7</color>
+@@ -108,14 +108,18 @@
+     <color name="material_red_A100">#ff8a80</color>
+     <color name="material_red_A700">#d50000</color>
+ 
++    <color name="material_pixel_blue_light">#ff3e4147</color>
++    <color name="material_pixel_blue_dark">#ff2a2c31</color>
++    <color name="material_pixel_blue_bright">#ff4285f4</color>
++
+     <!-- Time picker defaults when no theme is set -->
+     <eat-comment />
+ 
+     <color name="timepicker_default_background_material">@color/primary_text_default_material_light</color>
+     <color name="timepicker_default_text_color_material">@color/black</color>
+-    <color name="timepicker_default_ampm_selected_background_color_material">@color/material_deep_teal_200</color>
++    <color name="timepicker_default_ampm_selected_background_color_material">@color/material_pixel_blue_bright</color>
+     <color name="timepicker_default_ampm_unselected_background_color_material">@color/transparent</color>
+-    <color name="timepicker_default_selector_color_material">@color/material_deep_teal_200</color>
++    <color name="timepicker_default_selector_color_material">@color/material_pixel_blue_bright</color>
+     <color name="timepicker_default_numbers_background_color_material">@color/transparent</color>
+ 
+     <!-- DatePicker colors -->
+@@ -139,8 +143,8 @@
+     <color name="datepicker_default_pressed_text_color_material_light">#ff0099cc</color>
+     <color name="datepicker_default_pressed_text_color_material_dark">#ff0099cc</color>
+ 
+-    <color name="datepicker_default_circle_background_color_material_light">@color/material_deep_teal_500</color>
+-    <color name="datepicker_default_circle_background_color_material_dark">@color/material_deep_teal_200</color>
++    <color name="datepicker_default_circle_background_color_material_light">@color/material_pixel_blue_bright</color>
++    <color name="datepicker_default_circle_background_color_material_dark">@color/material_pixel_blue_bright</color>
+ 
+     <color name="datepicker_default_view_animator_color_material_light">#fff2f2f2</color>
+     <color name="datepicker_default_view_animator_color_material_dark">#ff303030</color>
+-- 
+2.43.0
+

@@ -1,0 +1,144 @@
+From 2d33f75dfad7ca224419bf3873987866a62e06a9 Mon Sep 17 00:00:00 2001
+From: 1582130940 <19632674+1582130940@users.noreply.github.com>
+Date: Mon, 9 Aug 2021 03:35:07 +0200
+Subject: [PATCH 02/17] fwb: Disable some debugs/logs
+
+* ResourceTypes: Don't spam logcat
+fusionjack <dogfight60-fusionjack@yahoo.de>
+
+* GpsNetInitiatedHandler: Disable More Debugging
+Chet Kener <Cl3Kener@gmail.com>
+
+* Ringtone/DeadZone: Turn off some debugs
+AndroidRul3z <ferrettidario@gmail.com>
+
+* BluetoothAdapter: Disable logspew
+Alexander Martinz <eviscerationls@gmail.com>
+
+* base: Kill some log spam
+* SystemUI: Disable KeyguardConstants DEBUG
+maxwen <max.weninger@gmail.com>
+
+* BluetoothUtils: Disable useless logspam
+?UTF-8?q?Sim=C3=A3o=20Gomes=20Viana?= <devel@superboring.dev>
+
+* InterruptionStateProvider: Disable debugging
+jhonboy121 <alfredmathew05@gmail.com>
+
+* DEBUG: Turn off some debugging we don't need.
+mydongistiny <jaysonedson@gmail.com>
+
+* DefaultPermissionGrantPolicy: Silence harmless errors
+Logcat spams with google packages not installed. Kill it.
+Pranav Vashi <neobuddy89@gmail.com>
+
+* services: LightsService: Mute an annoying error message.
+E LightsService: Light requested not available on this device. 2
+
+If you google for the error you will find many discussion threads or logcats
+that show this error. Since the error only describes that the device does
+not support this function, the error can be classified as harmless. In order
+not to confuse the user, we will now hide the logging of this error.
+spezi77 <spezi7713@gmx.net>
+
+Co-authored-by: fusionjack <dogfight60-fusionjack@yahoo.de>
+Co-authored-by: Chet Kener <Cl3Kener@gmail.com>
+Co-authored-by: AndroidRul3z <ferrettidario@gmail.com>
+Co-authored-by: Alexander Martinz <eviscerationls@gmail.com>
+Co-authored-by: maxwen <max.weninger@gmail.com>
+Co-authored-by: ?UTF-8?q?Sim=C3=A3o=20Gomes=20Viana?= <devel@superboring.dev>
+Co-authored-by: jhonboy121 <alfredmathew05@gmail.com>
+Co-authored-by: mydongistiny <jaysonedson@gmail.com>
+Co-authored-by: spezi77 <spezi7713@gmx.net>
+Co-authored-by: Pranav Vashi <neobuddy89@gmail.com>
+---
+ core/java/android/bluetooth/BluetoothAdapter.java             | 2 +-
+ .../src/com/android/settingslib/bluetooth/BluetoothUtils.java | 2 +-
+ .../SystemUI/src/com/android/keyguard/KeyguardConstants.java  | 4 ++--
+ .../interruption/NotificationInterruptStateProviderImpl.java  | 4 ++--
+ .../server/pm/permission/DefaultPermissionGrantPolicy.java    | 1 -
+ services/core/jni/com_android_server_lights_LightsService.cpp | 2 +-
+ 6 files changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/core/java/android/bluetooth/BluetoothAdapter.java b/core/java/android/bluetooth/BluetoothAdapter.java
+index fc7b74394bd..ebea14f20ab 100644
+--- a/core/java/android/bluetooth/BluetoothAdapter.java
++++ b/core/java/android/bluetooth/BluetoothAdapter.java
+@@ -113,7 +113,7 @@ import java.lang.reflect.InvocationTargetException;
+  */
+ public final class BluetoothAdapter {
+     private static final String TAG = "BluetoothAdapter";
+-    private static final boolean DBG = true;
++    private static final boolean DBG = false;
+     private static final boolean VDBG = false;
+ 
+     /**
+diff --git a/packages/SettingsLib/src/com/android/settingslib/bluetooth/BluetoothUtils.java b/packages/SettingsLib/src/com/android/settingslib/bluetooth/BluetoothUtils.java
+index df2f973e85c..f22f0089bb9 100644
+--- a/packages/SettingsLib/src/com/android/settingslib/bluetooth/BluetoothUtils.java
++++ b/packages/SettingsLib/src/com/android/settingslib/bluetooth/BluetoothUtils.java
+@@ -31,7 +31,7 @@ public class BluetoothUtils {
+     private static final String TAG = "BluetoothUtils";
+ 
+     public static final boolean V = false; // verbose logging
+-    public static final boolean D = true;  // regular logging
++    public static final boolean D = false; // regular logging
+ 
+     public static final int META_INT_ERROR = -1;
+ 
+diff --git a/packages/SystemUI/src/com/android/keyguard/KeyguardConstants.java b/packages/SystemUI/src/com/android/keyguard/KeyguardConstants.java
+index 0340904cbd9..badbbec9864 100644
+--- a/packages/SystemUI/src/com/android/keyguard/KeyguardConstants.java
++++ b/packages/SystemUI/src/com/android/keyguard/KeyguardConstants.java
+@@ -26,6 +26,6 @@ public class KeyguardConstants {
+      * be used temporarily for debugging.
+      */
+     public static final boolean DEBUG = false;
+-    public static final boolean DEBUG_SIM_STATES = true;
+-    public static final boolean DEBUG_BIOMETRIC_WAKELOCK = true;
++    public static final boolean DEBUG_SIM_STATES = false;
++    public static final boolean DEBUG_BIOMETRIC_WAKELOCK = false;
+ }
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/notification/interruption/NotificationInterruptStateProviderImpl.java b/packages/SystemUI/src/com/android/systemui/statusbar/notification/interruption/NotificationInterruptStateProviderImpl.java
+index 5158f2eb032..b60e72ebc58 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/notification/interruption/NotificationInterruptStateProviderImpl.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/notification/interruption/NotificationInterruptStateProviderImpl.java
+@@ -54,8 +54,8 @@ import javax.inject.Singleton;
+ @Singleton
+ public class NotificationInterruptStateProviderImpl implements NotificationInterruptStateProvider {
+     private static final String TAG = "InterruptionStateProvider";
+-    private static final boolean DEBUG = Build.IS_ENG;
+-    private static final boolean DEBUG_HEADS_UP = Build.IS_ENG;
++    private static final boolean DEBUG = false;
++    private static final boolean DEBUG_HEADS_UP = false;
+     private static final boolean ENABLE_HEADS_UP = true;
+     private static final String SETTING_HEADS_UP_TICKER = "ticker_gets_heads_up";
+ 
+diff --git a/services/core/java/com/android/server/pm/permission/DefaultPermissionGrantPolicy.java b/services/core/java/com/android/server/pm/permission/DefaultPermissionGrantPolicy.java
+index cd53fb9ba52..521fc014657 100644
+--- a/services/core/java/com/android/server/pm/permission/DefaultPermissionGrantPolicy.java
++++ b/services/core/java/com/android/server/pm/permission/DefaultPermissionGrantPolicy.java
+@@ -284,7 +284,6 @@ public final class DefaultPermissionGrantPolicy {
+                 return mContext.getPackageManager().getPackageInfo(pkg,
+                         DEFAULT_PACKAGE_INFO_QUERY_FLAGS);
+             } catch (NameNotFoundException e) {
+-                Slog.e(TAG, "Package not found: " + pkg);
+                 return null;
+             }
+         }
+diff --git a/services/core/jni/com_android_server_lights_LightsService.cpp b/services/core/jni/com_android_server_lights_LightsService.cpp
+index 35d8219651d..c12f205f7d8 100644
+--- a/services/core/jni/com_android_server_lights_LightsService.cpp
++++ b/services/core/jni/com_android_server_lights_LightsService.cpp
+@@ -112,7 +112,7 @@ static void processReturn(
+         case Status::SUCCESS:
+             break;
+         case Status::LIGHT_NOT_SUPPORTED:
+-            ALOGE("Light requested not available on this device. %d", type);
++            ALOGV("Light requested not available on this device. %d", type);
+             break;
+         case Status::BRIGHTNESS_NOT_SUPPORTED:
+             ALOGE("Brightness parameter not supported on this device: %d",
+-- 
+2.43.0
+

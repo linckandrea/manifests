@@ -1,0 +1,30 @@
+From 987ac6d65d9add6cd3c085d12c0e4a18cbec6b87 Mon Sep 17 00:00:00 2001
+From: Michael W <baddaemon87@gmail.com>
+Date: Sat, 16 May 2020 14:55:21 +0200
+Subject: [PATCH 07/17] Notifications: Make USB-Debugging notification less
+ important
+
+By reducing the importance we end up with a collapsed notification instead of
+the full sized one we currently have
+
+Change-Id: I4b466ab70027cbefa8ea26bdabe459ed287c8fb7
+---
+ .../internal/notification/SystemNotificationChannels.java       | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core/java/com/android/internal/notification/SystemNotificationChannels.java b/core/java/com/android/internal/notification/SystemNotificationChannels.java
+index 41be5c493d9..3355d627d5c 100644
+--- a/core/java/com/android/internal/notification/SystemNotificationChannels.java
++++ b/core/java/com/android/internal/notification/SystemNotificationChannels.java
+@@ -95,7 +95,7 @@ public class SystemNotificationChannels {
+         final NotificationChannel developer = new NotificationChannel(
+                 DEVELOPER,
+                 context.getString(R.string.notification_channel_developer),
+-                NotificationManager.IMPORTANCE_LOW);
++                NotificationManager.IMPORTANCE_MIN);
+         developer.setBlockable(true);
+         channelsList.add(developer);
+ 
+-- 
+2.43.0
+

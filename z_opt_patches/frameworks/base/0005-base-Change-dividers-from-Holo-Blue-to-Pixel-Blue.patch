@@ -1,0 +1,67 @@
+From d3cde0184941b812ba292ae4decee8a1aa984195 Mon Sep 17 00:00:00 2001
+From: David <Davidteri91@gmail.com>
+Date: Sun, 13 Nov 2016 15:47:59 +0100
+Subject: [PATCH 05/17] base: Change dividers from Holo Blue to Pixel Blue
+
+Change-Id: I5ed66b9ca78f9fb3359cbee5c746ec2e50371970
+Signed-off-by: David Viteri <davidteri91@gmail.com>
+Signed-off-by: mydongistiny <jaysonedson@gmail.com>
+---
+ .../numberpicker_selection_divider.9.png         | Bin 141 -> 85 bytes
+ .../numberpicker_selection_divider.9.png         | Bin 135 -> 84 bytes
+ .../numberpicker_selection_divider.9.png         | Bin 142 -> 85 bytes
+ .../numberpicker_selection_divider.9.png         | Bin 217 -> 86 bytes
+ 4 files changed, 0 insertions(+), 0 deletions(-)
+
+diff --git a/core/res/res/drawable-hdpi/numberpicker_selection_divider.9.png b/core/res/res/drawable-hdpi/numberpicker_selection_divider.9.png
+index c9c72ba61947b714ec303af2d0a87eab4ba9fdeb..4e7eb8ad4324eecaffa85db939762770c2e00b7e 100644
+GIT binary patch
+delta 55
+zcmeBW44t52DC6nk7*cU7IiaE9zlVg<0zrePJUoY0I>e6{2s7+oBGcQx&e4(q2s~Z=
+KT-G@yGywn_5fZfk
+
+delta 111
+zcmWITWt^ar$x`g(8NvYsH5@4&3=9mM1s;*b3=G_zAk1if^7LAupuVSzV+hC0+@6iR
+z3<?4*7LVP|y_4wsSe&r<?&J#r4O|bxQ`HLJTG>pp$jDH>`<aRDi`Z2AoTamYS{XcD
+L{an^LB{Ts5PNgMX
+
+diff --git a/core/res/res/drawable-mdpi/numberpicker_selection_divider.9.png b/core/res/res/drawable-mdpi/numberpicker_selection_divider.9.png
+index 076fc16642176d49cc1b162d4838de91ce6e27f6..97d250f889a2bfc8a7e9af92118de3dfeda087bb 100644
+GIT binary patch
+delta 54
+zcmZo?44I%}Anobm7*cU7IiaE9e*n+J3>F_t=0gUKJd7f`3_sWNN2>q(oXG$Lp00i_
+I>zopr0R6oZM*si-
+
+delta 105
+zcmWG(XPlst%u?*+8NvYsH5@4&3=9mM1s;*b3=G_zAk1if^7LAupr)sbV+hC0*wco*
+z3<?YfHuOH=czeQu&FYx{{~$(|5W}n2_OUzUe)xTw`N;{9sb3xEN&+=8c)I$ztaD0e
+F0suwtB8>n5
+
+diff --git a/core/res/res/drawable-xhdpi/numberpicker_selection_divider.9.png b/core/res/res/drawable-xhdpi/numberpicker_selection_divider.9.png
+index 97eb5fe801eada2d077858419e86ad57b23c9912..a893b5790a6a49cf19c8acbad964b3b103bcab55 100644
+GIT binary patch
+delta 55
+zcmeBU44t52DC6nk7*cU7IiaE9e};t83PFRXJVtGvL4i!GpE9T))Ghq=VApj9An<hc
+Kb6Mw<&;$TF_Y|=J
+
+delta 112
+zcmWITW1OIp#Zv6#8NvYsH5@4&3=9mM1s;*b3=G_zAk1if^7LAupn<20V+hC0sl6L{
+z859IsEFQa^dneKNQ07M6=T?;vkp)Z<p));We#>!r%9#9N-}RIE`A3PVcWV!V3}o<h
+L^>bP0l+XkKUP&d?
+
+diff --git a/core/res/res/drawable-xxhdpi/numberpicker_selection_divider.9.png b/core/res/res/drawable-xxhdpi/numberpicker_selection_divider.9.png
+index b7a99402eb58c62b821e388e56bc1f24f1e468c6..3b6fa1a6c40721052e056f7bfcfc38d9b3622810 100644
+GIT binary patch
+delta 56
+zcmcb~7&bx0NY>NEF{I*FazaDHe+vVbAmxNpk~tE~GCVX6y!K^qofqZF<YvLl00f?{
+KelF{r5}E)#h!Vp9
+
+delta 188
+zcmWH$$v8o!o~78yGlT;OYB*9l7#J8h3p^r=85p>QK$!8;-MT+OL75WQh?3y^w370~
+zqErUQl>DSr1-Hzi)bjkI>|zDyVAH~_kIjJUL_zADi&7IyGV}8kLNaqx87%dU4D<~R
+z-s`aL04gx@ba4!kn0mH<BQJx3K#SaCGq-c^B>Eo8+=z-v($+OuAeO)yV)bA~^-_in
+gs)e7O4`hF4@ct>Z@+6n>2cUKaPgg&ebxsLQ0Peayp#T5?
+
+-- 
+2.43.0
+

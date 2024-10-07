@@ -1,0 +1,30 @@
+From c636c62b14f393091dfc1d1d698a9a7a4743e125 Mon Sep 17 00:00:00 2001
+From: Danny Lin <danny@kdrag0n.dev>
+Date: Fri, 18 Sep 2020 09:13:02 -0700
+Subject: [PATCH 09/17] config: Don't use all-caps text for buttons
+
+This looks more modern and matches the stock Pixel look.
+
+Extracted from the Pixel stock ROM.
+
+Change-Id: I4fbb9fca6cc31416f7cbaaeff670d98e0dba54ad
+---
+ core/res/res/values/config.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
+index 152000b0ae7..179b4c6f9db 100644
+--- a/core/res/res/values/config.xml
++++ b/core/res/res/values/config.xml
+@@ -3781,7 +3781,7 @@
+     <!-- Corner radius of system progress bars -->
+     <dimen name="config_progressBarCornerRadius">@dimen/progress_bar_corner_material</dimen>
+     <!-- Controls whether system buttons use all caps for text -->
+-    <bool name="config_buttonTextAllCaps">true</bool>
++    <bool name="config_buttonTextAllCaps">false</bool>
+     <!-- Name of the font family used for system surfaces where the font should use medium weight -->
+     <string name="config_headlineFontFamilyMedium" translateable="false">@string/font_family_button_material</string>
+     <!-- Name of a font family to use for body text. -->
+-- 
+2.43.0
+

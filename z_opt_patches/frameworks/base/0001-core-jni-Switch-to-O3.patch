@@ -1,0 +1,34 @@
+From 8a0f69b38fe5596807bd6e1e600d4da8363b864a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Sim=C3=A3o=20Gomes=20Viana?= <devel@superboring.dev>
+Date: Sun, 28 Feb 2021 11:26:50 +0530
+Subject: [PATCH 01/17] core: jni: Switch to -O3
+
+Signed-off-by: adiatul16 <adiatul16@gmail.com>
+---
+ core/jni/Android.bp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/core/jni/Android.bp b/core/jni/Android.bp
+index 0797b18f12d..c6b5f1287e2 100644
+--- a/core/jni/Android.bp
++++ b/core/jni/Android.bp
+@@ -3,6 +3,7 @@ cc_library_shared {
+     name: "libandroid_runtime",
+     host_supported: true,
+     cflags: [
++        "-O3",
+         "-Wno-unused-parameter",
+         "-Wno-non-virtual-dtor",
+         "-Wno-maybe-uninitialized",
+@@ -20,7 +21,7 @@ cc_library_shared {
+         "-Wunreachable-code",
+     ],
+ 
+-    cppflags: ["-Wno-conversion-null"],
++    cppflags: ["-Wno-conversion-null", "-O3"],
+ 
+     srcs: [
+         "android_animation_PropertyValuesHolder.cpp",
+-- 
+2.43.0
+

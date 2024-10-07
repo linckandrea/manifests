@@ -1,0 +1,32 @@
+From 1d861c917acd7aa6eea1db9297b3eda1338fc8d7 Mon Sep 17 00:00:00 2001
+From: maxwen <max.weninger@gmail.com>
+Date: Wed, 15 Apr 2015 23:29:30 +0200
+Subject: [PATCH 12/17] base: kill some log spam
+
+Really annoying...
+
+Change-Id: I14aa3cb522ff368082db6032bcd6eff620f09616
+Signed-off-by: mydongistiny <jaysonedson@gmail.com>
+Signed-off-by: Simao Gomes Viana <xdevs23@outlook.com>
+Signed-off-by: spezi77 <spezi77@gmx.com>
+Signed-off-by: Saikiran <bjsaikiran@gmail.com>
+---
+ services/core/java/com/android/server/ConnectivityService.java | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/services/core/java/com/android/server/ConnectivityService.java b/services/core/java/com/android/server/ConnectivityService.java
+index 6a34fc7324c..3736fbc5cf1 100644
+--- a/services/core/java/com/android/server/ConnectivityService.java
++++ b/services/core/java/com/android/server/ConnectivityService.java
+@@ -265,7 +265,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
+     private static final String NETWORK_ARG = "networks";
+     private static final String REQUEST_ARG = "requests";
+ 
+-    private static final boolean DBG = true;
++    private static final boolean DBG = false;
+     private static final boolean DDBG = Log.isLoggable(TAG, Log.DEBUG);
+     private static final boolean VDBG = Log.isLoggable(TAG, Log.VERBOSE);
+ 
+-- 
+2.43.0
+

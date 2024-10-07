@@ -1,0 +1,54 @@
+From eaa6eddf35d5a0bfbb65d1d4d1e30875a87b2a6d Mon Sep 17 00:00:00 2001
+From: Miguel Martinez <slverwolf@gmail.com>
+Date: Mon, 12 Aug 2019 14:31:08 +0200
+Subject: [PATCH 3/3] build/Android.oat: Disable debug
+
+Change-Id: I4cfab431c646837e57448b5e525ae3fc892830ea
+Signed-off-by: xawlw <abdulazizawlw@gmail.com>
+---
+ build/Android.oat.mk | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/build/Android.oat.mk b/build/Android.oat.mk
+index c6fe40050c..1907c85a6e 100644
+--- a/build/Android.oat.mk
++++ b/build/Android.oat.mk
+@@ -97,7 +97,7 @@ $$(core_image_name): $$(HOST_CORE_DEX_LOCATIONS) $$(core_dex2oat_dependency)
+ 	  $$(LOCAL_$(2)DEX2OAT_HOST_INSTRUCTION_SET_FEATURES_OPTION) \
+ 	  --host --android-root=$$(HOST_OUT) \
+ 	  --generate-debug-info --generate-build-id \
+-	  --runtime-arg -XX:SlowDebug=true \
++	  --runtime-arg -XX:SlowDebug=false \
+ 	  --no-inline-from=core-oj-hostdex.jar \
+ 	  $$(PRIVATE_CORE_COMPILE_OPTIONS) && \
+ 	ANDROID_LOG_TAGS="*:e" $$(DEX2OAT) \
+@@ -119,7 +119,7 @@ $$(core_image_name): $$(HOST_CORE_DEX_LOCATIONS) $$(core_dex2oat_dependency)
+ 	  $$(LOCAL_$(2)DEX2OAT_HOST_INSTRUCTION_SET_FEATURES_OPTION) \
+ 	  --host --android-root=$$(HOST_OUT) \
+ 	  --generate-debug-info --generate-build-id \
+-	  --runtime-arg -XX:SlowDebug=true \
++	  --runtime-arg -XX:SlowDebug=false \
+ 	  --no-inline-from=core-oj-hostdex.jar \
+ 	  $$(PRIVATE_CORE_COMPILE_OPTIONS)
+ 
+@@ -214,7 +214,7 @@ $$(core_image_name): $$(TARGET_CORE_DEX_FILES) $$(core_dex2oat_dependency)
+ 	  --instruction-set-features=$$($(2)DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES) \
+ 	  --android-root=$$(PRODUCT_OUT)/system \
+ 	  --generate-debug-info --generate-build-id \
+-	  --runtime-arg -XX:SlowDebug=true \
++	  --runtime-arg -XX:SlowDebug=false \
+ 	  $$(PRIVATE_CORE_COMPILE_OPTIONS) && \
+ 	$$(DEX2OAT) \
+ 	  --runtime-arg -Xms$(DEX2OAT_IMAGE_XMS) \
+@@ -236,7 +236,7 @@ $$(core_image_name): $$(TARGET_CORE_DEX_FILES) $$(core_dex2oat_dependency)
+ 	  --instruction-set-features=$$($(2)DEX2OAT_TARGET_INSTRUCTION_SET_FEATURES) \
+ 	  --android-root=$$(PRODUCT_OUT)/system \
+ 	  --generate-debug-info --generate-build-id \
+-	  --runtime-arg -XX:SlowDebug=true \
++	  --runtime-arg -XX:SlowDebug=false \
+ 	  $$(PRIVATE_CORE_COMPILE_OPTIONS) || \
+ 	(rm $$(PRIVATE_CORE_OAT_NAME); exit 1)
+ 
+-- 
+2.43.0
+

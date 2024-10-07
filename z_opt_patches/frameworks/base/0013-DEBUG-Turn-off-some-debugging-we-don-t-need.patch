@@ -1,0 +1,82 @@
+From 9e4b646d6e68b5f954857ae61af74b3fa79be360 Mon Sep 17 00:00:00 2001
+From: mydongistiny <jaysonedson@gmail.com>
+Date: Fri, 25 Sep 2015 22:32:09 -0700
+Subject: [PATCH 13/17] DEBUG: Turn off some debugging we don't need.
+
+Change-Id: I8871101df53e9d63dc0b1987b5f3c0540b5b5759
+---
+ .../com/android/backupconfirm/BackupRestoreConfirmation.java    | 2 +-
+ .../src/com/android/printspooler/model/MutexFileProvider.java   | 2 +-
+ .../src/com/android/sharedstoragebackup/ObbBackupService.java   | 2 +-
+ .../src/com/android/sharedstoragebackup/SharedStorageAgent.java | 2 +-
+ .../src/com/android/systemui/statusbar/GestureRecorder.java     | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/packages/BackupRestoreConfirmation/src/com/android/backupconfirm/BackupRestoreConfirmation.java b/packages/BackupRestoreConfirmation/src/com/android/backupconfirm/BackupRestoreConfirmation.java
+index d6b6bf8d1e5..be8c26cb9cb 100644
+--- a/packages/BackupRestoreConfirmation/src/com/android/backupconfirm/BackupRestoreConfirmation.java
++++ b/packages/BackupRestoreConfirmation/src/com/android/backupconfirm/BackupRestoreConfirmation.java
+@@ -50,7 +50,7 @@ import android.widget.Toast;
+  */
+ public class BackupRestoreConfirmation extends Activity {
+     static final String TAG = "BackupRestoreConfirmation";
+-    static final boolean DEBUG = true;
++    static final boolean DEBUG = false;
+ 
+     static final String KEY_DID_ACKNOWLEDGE = "did_acknowledge";
+     static final String KEY_TOKEN = "token";
+diff --git a/packages/PrintSpooler/src/com/android/printspooler/model/MutexFileProvider.java b/packages/PrintSpooler/src/com/android/printspooler/model/MutexFileProvider.java
+index 0df5e3cf18d..60c9b586cb1 100644
+--- a/packages/PrintSpooler/src/com/android/printspooler/model/MutexFileProvider.java
++++ b/packages/PrintSpooler/src/com/android/printspooler/model/MutexFileProvider.java
+@@ -35,7 +35,7 @@ import java.io.IOException;
+ public final class MutexFileProvider {
+     private static final String LOG_TAG = "MutexFileProvider";
+ 
+-    private static final boolean DEBUG = true;
++    private static final boolean DEBUG = false;
+ 
+     private final Object mLock = new Object();
+ 
+diff --git a/packages/SharedStorageBackup/src/com/android/sharedstoragebackup/ObbBackupService.java b/packages/SharedStorageBackup/src/com/android/sharedstoragebackup/ObbBackupService.java
+index 0f8ccd7bc40..ce8c377153a 100644
+--- a/packages/SharedStorageBackup/src/com/android/sharedstoragebackup/ObbBackupService.java
++++ b/packages/SharedStorageBackup/src/com/android/sharedstoragebackup/ObbBackupService.java
+@@ -43,7 +43,7 @@ import com.android.internal.backup.IObbBackupService;
+  */
+ public class ObbBackupService extends Service {
+     static final String TAG = "ObbBackupService";
+-    static final boolean DEBUG = true;
++    static final boolean DEBUG = false;
+ 
+     /**
+      * IObbBackupService interface implementation
+diff --git a/packages/SharedStorageBackup/src/com/android/sharedstoragebackup/SharedStorageAgent.java b/packages/SharedStorageBackup/src/com/android/sharedstoragebackup/SharedStorageAgent.java
+index e453cf53a98..1b9c0cff7ce 100644
+--- a/packages/SharedStorageBackup/src/com/android/sharedstoragebackup/SharedStorageAgent.java
++++ b/packages/SharedStorageBackup/src/com/android/sharedstoragebackup/SharedStorageAgent.java
+@@ -16,7 +16,7 @@ import java.io.IOException;
+ 
+ public class SharedStorageAgent extends FullBackupAgent {
+     static final String TAG = "SharedStorageAgent";
+-    static final boolean DEBUG = true;
++    static final boolean DEBUG = false;
+ 
+     StorageVolume[] mVolumes;
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/GestureRecorder.java b/packages/SystemUI/src/com/android/systemui/statusbar/GestureRecorder.java
+index f2adaf042b2..5580d6c5647 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/GestureRecorder.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/GestureRecorder.java
+@@ -34,7 +34,7 @@ import java.util.LinkedList;
+  * Convenience class for capturing gestures for later analysis.
+  */
+ public class GestureRecorder {
+-    public static final boolean DEBUG = true; // for now
++    public static final boolean DEBUG = false; // for now
+     public static final String TAG = GestureRecorder.class.getSimpleName();
+ 
+     public class Gesture {
+-- 
+2.43.0
+
