@@ -2,9 +2,9 @@
 <manifest>
 
   <!-- 8976 gts2* -->
-  <project name="linckandrea/android_device_samsung_msm8976-common" path="device/samsung/msm8976-common" remote="github" revision="lineage-18.1-wip8-v2" />
-  <project name="linckandrea/android_device_samsung_gts210velte" path="device/samsung/gts210velte" remote="github" revision="lineage-18.1-wip2" />
-  <project name="linckandrea/android_kernel_samsung_msm8976" path="kernel/samsung/msm8976" remote="github" revision="R-r3-t-f2fs-v2" />
+  <project name="linckandrea/android_device_samsung_msm8976-common" path="device/samsung/msm8976-common" remote="github" revision="lineage-18.1-ultimate" />
+  <project name="linckandrea/android_device_samsung_gts210velte" path="device/samsung/gts210velte" remote="github" revision="lineage-18.1-ultimate" />
+  <project name="linckandrea/android_kernel_samsung_msm8976" path="kernel/samsung/msm8976" remote="github" revision="R-r4-t" />
   <project name="linckandrea/proprietary_vendor_samsung" path="vendor/samsung" remote="github" revision="lineage-18.1-wip5-v2" />
   <project name="LineageOS/android_hardware_samsung" path="hardware/samsung" remote="github"/>
  <!--  Additional needed dependencies, uncomment on vanilla lineage-18.1 - keep on lin18-microG
