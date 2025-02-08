@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+
+  <!-- 8994 sumire -->
+  <project name="linckandrea/android_device_sony_kitakami-common" path="device/sony/kitakami-common" remote="github" revision="lineage-18.1-rw4-t6" />
+  <project name="linckandrea/android_device_sony_sumire" path="device/sony/sumire" remote="github" revision="lineage-18.1" />
+  <project name="linckandrea/android_kernel_sony_msm8994" path="kernel/sony/msm8994" remote="github" revision="R-r3-t2" />
+  <project name="linckandrea/proprietary_vendor_sony_kitakami" path="vendor/sony" remote="github" revision="lineage-18.1_update" />
+ <!--  Additional needed dependencies, uncomment on vanilla lineage-18.1 - keep on lin18-microG
+  <project name="LineageOS/android_hardware_sony_timekeep" path="hardware/sony/timekeep" />
+ -->
+</manifest>
